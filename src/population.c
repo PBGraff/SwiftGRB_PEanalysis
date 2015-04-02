@@ -17,7 +17,7 @@ void angle_to_grid(int angle, double *r, double *phi)
 double bkgd_logvals[4*NBACKGROUND];
 void read_background_values()
 {
-	char bkgdfilename[] = "background_count_table.txt";
+	char bkgdfilename[] = "support_data/background_count_table.txt";
 	char line[100], bgd_name[50];
 	int i = 0;
 	
