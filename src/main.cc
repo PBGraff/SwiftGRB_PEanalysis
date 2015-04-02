@@ -232,6 +232,7 @@ This program runs BAMBI on the Swift GRB population-fitting problem. Here are av
 Run Settings\n\
 -------------------------------------------------------------------------------------------------\n\
 --resume     Resume the run from before (default=off)\n\
+--nlive      Number of live points for BAMBI to use (default=100)\n\
 \n\
 Data Settings\n\
 -------------------------------------------------------------------------------------------------\n\

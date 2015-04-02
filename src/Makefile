@@ -1,25 +1,31 @@
-CBLASDIR = /opt/local
+# MAC
+#CBLASDIR = /opt/local
+#CC = gcc-mp-4.8 -m64
+#CXX = g++-mp-4.8 -m64
+#FC = gfortran-mp-4.7 -m64
+#CFLAGS += -I. -O3 -I$(CBLASDIR)/include/
+#CXXFLAGS += -I. -O3 -I$(CBLASDIR)/include/
+#FFLAGS += -w -O3
+#LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
 
-CC = gcc-mp-4.8 -m64
-CXX = g++-mp-4.8 -m64
-FC = gfortran-mp-4.7 -m64
-CFLAGS += -I. -O3 -I$(CBLASDIR)/include/
-CXXFLAGS += -I. -O3 -I$(CBLASDIR)/include/
-FFLAGS += -w -O3
-LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
+# NEMO
+CC = gcc -DPARALLEL
+CXX = g++ -DPARALLEL
+FC = gfortran -DMPI
+CFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
+CXXFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
+FFLAGS += -w -O3 -g
+LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
 
-LIBS =  -L/usr/local/lib -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
 
-CFLAGS += -I/usr/local/include -Inumerical_recipes_double
-
-#CFLAGS += -g -pg
-#FFLAGS += -g -pg
+CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
 
 export CC CXX FC CFLAGS CXXFLAGS FFLAGS
  
 OBJFILES = bambi.o utils.o main.o
 
-default: main
+default: all
 
 all: main test genpop
 
@@ -39,7 +45,7 @@ main: nr $(OBJFILES)
 	$(FC) $(FFLAGS) -o ../Analysis $(OBJFILES) $(LIBS)
 
 genpop: nr
-	$(CXX) $(CFLAGS) -o GenPop genPopTest.cc -Lnumerical_recipes_double -lnr -L/opt/local/lib -lgsl
+	$(CXX) $(CFLAGS) -o GenPop genPopTest.cc -Lnumerical_recipes_double -lnr -L/usr/lib -lgsl -lgslcblas
 
 clean:
 	rm -f *.o test ../Analysis GenPop
