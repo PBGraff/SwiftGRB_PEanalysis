@@ -36,13 +36,13 @@ nr:
 	make -C numerical_recipes_double
 
 main: nr $(OBJFILES)
-	$(FC) $(FFLAGS) -o Analysis $(OBJFILES) $(LIBS)
+	$(FC) $(FFLAGS) -o ../Analysis $(OBJFILES) $(LIBS)
 
 genpop: nr
 	$(CXX) $(CFLAGS) -o GenPop genPopTest.cc -Lnumerical_recipes_double -lnr -L/opt/local/lib -lgsl
 
 clean:
-	rm -f *.o test Analysis GenPop
+	rm -f *.o test ../Analysis GenPop
 	make -C numerical_recipes_double clean
 
 tidy:
