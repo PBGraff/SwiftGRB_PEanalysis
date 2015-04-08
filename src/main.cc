@@ -46,7 +46,7 @@ double CubeToLogPrior(double r, double xmin, double xmax)
 void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 {
 	// n0
-	Cube[0] = CubeToLogPrior(Cube[0], 0.25, 2.00);
+	Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
 
 	// n1
 	Cube[1] = CubeToFlatPrior(Cube[1], 1.60, 4.00);
