@@ -318,8 +318,8 @@ Model Settings\n\
 	}
 	else
 	{
-		sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_d%d_p%d_seed%ld_", (int)round(fabs(n0_data*100)), 
-				(int)round(fabs(n1_data*100)), (int)round(fabs(n2_data*100)), runargs.datapopsize, runargs.popsize, runargs.seed);
+		sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_d%d_p%d_seed%ld_", (int)round(fabs(runargs.n0*100)), 
+				(int)round(fabs(runargs.n1*100)), (int)round(fabs(runargs.n2*100)), runargs.datapopsize, runargs.popsize, runargs.seed);
 		
 		// simulate data
 		double *datapop=NULL, *dataz=NULL, *dataprob=NULL;
