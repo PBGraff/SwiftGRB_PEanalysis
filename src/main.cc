@@ -20,11 +20,11 @@ double *zdata=NULL;
 long int ndetdata=0, ndetpop;
 double *population=NULL, *zpop=NULL, *ppop=NULL, *zdetpop=NULL;
 float *sample=NULL;
-double n0_data, n1_data, n2_data;
+//double n0_data, n1_data, n2_data;
 double ksd, ksp;
 float prob;
-int popsize, dpopsize;
-bool nstar = false;
+//int popsize, dpopsize;
+//bool nstar = false;
 RunArgs runargs;
 
 extern "C" {
@@ -54,11 +54,15 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 	Cube[2] = CubeToFlatPrior(Cube[2], -4.00, 0.00);
 
 	// n0
-	if (nstar) {
+	if (runargs.nstar) {
 		double nstar = CubeToLogPrior(Cube[0], 2.00, 900.0);
 		Cube[0] = nstar * pow(1.0 + Z1DATA, -Cube[1]);
 	} else {
-		Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
+		if (runargs.flatn0) {
+			Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
+		} else {
+			Cube[0] = CubeToLogPrior(Cube[0], 0.25, 2.00);
+		}
 	}
 }
 
