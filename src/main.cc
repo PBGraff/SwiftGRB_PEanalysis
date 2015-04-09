@@ -122,10 +122,10 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	// Make sample population
 	long int seed = (long int) time(NULL);
 	seed *= -34653;
-	GeneratePopulation(population, popsize, n0, n1, n2, z1, x, y, logLstar, zpop, &seed);
+	GeneratePopulation(population, runargs.popsize, n0, n1, n2, z1, x, y, logLstar, zpop, &seed);
 	
 	// Predict probability of detection for each GRB
-	for ( i=0; i<popsize; i++)
+	for ( i=0; i<runargs.popsize; i++)
 	{
 		for ( j=0; j<NINPUTS; j++ )
 		{
@@ -137,7 +137,7 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	}
 
 	// Find detected GRBs in population
-	detected(zpop, ppop, popsize, 0.5, zdetpop, &ndetpop);
+	detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 
 	// Calculate K-S test p-value
 	kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
