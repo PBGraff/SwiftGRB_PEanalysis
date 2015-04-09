@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <stdbool.h>
 
 typedef struct RunOptions {
 	double n0;
