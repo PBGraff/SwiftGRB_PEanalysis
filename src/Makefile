@@ -49,8 +49,12 @@ genpop: nr
 
 clean:
 	rm -f *.o test ../Analysis GenPop
+
+cleanall: clean
 	make -C numerical_recipes_double clean
 
 tidy:
 	rm -f *.o
+
+tidyall: tidy
 	make -C numerical_recipes_double tidy

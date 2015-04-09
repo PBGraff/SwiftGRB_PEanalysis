@@ -304,7 +304,7 @@ Model Settings\n\
 		// Read in data
 		ndetdata = countlines(args.datafile);
 		zdata = (double *) malloc(ndetdata * sizeof(double));
-		FILE *fptr = fopen(datafile, "r");
+		FILE *fptr = fopen(args.datafile, "r");
 		for ( i=0; i<ndetdata; i++ )
 		{
 			fscanf(fptr, "%lf\n", &zdata[i]);
