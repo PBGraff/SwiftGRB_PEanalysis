@@ -24,6 +24,8 @@ double n0_data, n1_data, n2_data;
 double ksd, ksp;
 float prob;
 int popsize, dpopsize;
+bool nstar = false;
+RunArgs args;
 
 extern "C" {
 	#include "mock_sample_functions.c"
@@ -45,14 +47,19 @@ double CubeToLogPrior(double r, double xmin, double xmax)
 
 void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 {
-	// n0
-	Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
-
 	// n1
 	Cube[1] = CubeToFlatPrior(Cube[1], 1.60, 4.00);
 
 	// n2
 	Cube[2] = CubeToFlatPrior(Cube[2], -4.00, 0.00);
+
+	// n0
+	if (nstar) {
+		double nstar = CubeToLogPrior(Cube[0], 2.00, 900.0);
+		Cube[0] = nstar * pow(1.0 + Z1DATA, -Cube[1]);
+	} else {
+		Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
+	}
 }
 
 /******************************************** getallparams routine ****************************************************/
@@ -209,20 +216,26 @@ int main(int argc, char *argv[])
 	
 	int i,j;
 
-	int resflag = 0, help = 0;
-	n0_data = 0.84;
-	n1_data = 2.07;
-	n2_data = -0.7;
-	popsize = 1000;
-	dpopsize = 100;
-	long int dataseed=0, dataseed_save=0;
-	char datafile[200] = "\0";
-	int Nlive = 100;
+	// initialize default options for arguments
+	args.resume = 0;
+	args.help = 0;
+	args.n0 = 0.84;
+	args.n1 = 2.07;
+	args.n2 = -0.7;
+	args.popsize = 1000;
+	args.datapopsize = 100;
+	args.seed = 0;
+	strcpy(args.datafile,"\0");
+	args.nlive = 100;
+	args.nstar = false;
+	args.flatn0 = false;
+
+	long int dataseed=0;
 
 	// get command-line options
-	read_options(argc, argv, &n0_data, &n1_data, &n2_data, &dataseed_save, &resflag, &popsize, &dpopsize, &help, datafile, &Nlive);
+	read_options(argc, argv, &args);
 
-	if ( help == 1 )
+	if ( args.help == 1 )
 	{
 		char helpstr[] = "\n\
 This program runs BAMBI on the Swift GRB population-fitting problem. Here are available options:\n\
@@ -255,7 +268,7 @@ Model Settings\n\
 		return 0;
 	}
 
-	if ( dataseed_save==0 && strcmp(datafile,"")==0 )
+	if ( args.seed==0 && strcmp(args.datafile,"")==0 )
 	{
 		fprintf(stderr, "You need to provide either a data seed (--seed) or an input data file (--file).\n");
 #ifdef PARALLEL
@@ -264,7 +277,7 @@ Model Settings\n\
 		return 0;
 	}
 
-	dataseed = -347*dataseed_save;
+	dataseed = -347*args.seed;
 
 	// Read in saved neural network for GRB detection predictions
 	GRBnn = new FeedForwardClassNetwork();
@@ -277,19 +290,19 @@ Model Settings\n\
 	load_splines();
 
 	// allocate memory
-	population = (double *) malloc(popsize * NINPUTS * sizeof(double));
-	zpop = (double *) malloc(popsize * sizeof(double));
-	ppop = (double *) malloc(popsize * sizeof(double));
-	zdetpop = (double *) malloc(popsize * sizeof(double));
+	population = (double *) malloc(args.popsize * NINPUTS * sizeof(double));
+	zpop = (double *) malloc(args.popsize * sizeof(double));
+	ppop = (double *) malloc(args.popsize * sizeof(double));
+	zdetpop = (double *) malloc(args.popsize * sizeof(double));
 	sample = (float *) malloc(NINPUTS * sizeof(float));
 
 	char outroot[100] = "";
-	if ( dataseed_save == 0 )
+	if ( args.seed == 0 )
 	{
 		sprintf(outroot, "chains/analysis_realdata_");
 		
 		// Read in data
-		ndetdata = countlines(datafile);
+		ndetdata = countlines(args.datafile);
 		zdata = (double *) malloc(ndetdata * sizeof(double));
 		FILE *fptr = fopen(datafile, "r");
 		for ( i=0; i<ndetdata; i++ )
@@ -302,18 +315,18 @@ Model Settings\n\
 	else
 	{
 		sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_d%d_p%d_seed%ld_", (int)round(fabs(n0_data*100)), 
-				(int)round(fabs(n1_data*100)), (int)round(fabs(n2_data*100)), dpopsize, popsize, dataseed_save);
+				(int)round(fabs(n1_data*100)), (int)round(fabs(n2_data*100)), args.datapopsize, args.popsize, args.seed);
 		
 		// simulate data
 		double *datapop=NULL, *dataz=NULL, *dataprob=NULL;
-		datapop = (double *) malloc(dpopsize * NINPUTS * sizeof(double));
-		dataz = (double *) malloc(dpopsize * sizeof(double));
-		dataprob = (double *) malloc(dpopsize * sizeof(double));
-		zdata = (double *) malloc(dpopsize * sizeof(double));
+		datapop = (double *) malloc(args.datapopsize * NINPUTS * sizeof(double));
+		dataz = (double *) malloc(args.datapopsize * sizeof(double));
+		dataprob = (double *) malloc(args.datapopsize * sizeof(double));
+		zdata = (double *) malloc(args.datapopsize * sizeof(double));
 		float dprob;
-		GeneratePopulation(datapop, dpopsize, n0_data, n1_data, n2_data, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
+		GeneratePopulation(datapop, args.datapopsize, args.n0, args.n1, args.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
 		//FILE *fptr = fopen("junk","w");
-		for ( i=0; i<dpopsize; i++)
+		for ( i=0; i<args.datapopsize; i++)
 		{
 			for ( j=0; j<NINPUTS; j++ )
 			{
@@ -326,12 +339,12 @@ Model Settings\n\
 			//printf("%f\n",dprob);
 		}
 		//fclose(fptr);
-		detected(dataz, dataprob, dpopsize, 0.5, zdata, &ndetdata);
+		detected(dataz, dataprob, args.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %d detected GRBs\n", (int) ndetdata);
 
 		// simulate a similar population and evaluate the likelihood
-		GeneratePopulation(population, popsize, n0_data, n1_data, n2_data, 3.6, -0.65, -3.0, 52.05, zpop, &dataseed);
-		for ( i=0; i<popsize; i++)
+		GeneratePopulation(population, args.popsize, args.n0, args.n1, args.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, zpop, &dataseed);
+		for ( i=0; i<args.popsize; i++)
 		{
 			for ( j=0; j<NINPUTS; j++ )
 			{
@@ -340,7 +353,7 @@ Model Settings\n\
 			GRBnn->forwardOne(1, &sample[0], &prob);
 			ppop[i] = (double) prob;
 		}
-		detected(zpop, ppop, popsize, 0.5, zdetpop, &ndetpop);
+		detected(zpop, ppop, args.popsize, 0.5, zdetpop, &ndetpop);
 		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
 		printf("Similar distribution has logL = %lf\n", log(ksp));
 	}
@@ -352,7 +365,7 @@ Model Settings\n\
 	
 	int ceff = 0;					// run in constant efficiency mode?
 	
-	int nlive = Nlive;				// number of live points
+	int nlive = args.nlive;				// number of live points
 	
 	double efr = 0.1;				// set the required efficiency
 	
@@ -381,7 +394,7 @@ Model Settings\n\
 	
 	int fb = 1;					// need feedback on standard output?
 	
-	resume = resflag;					// resume from a previous job?
+	resume = args.resume;					// resume from a previous job?
 	
 	int outfile = 1;				// write output files?
 	

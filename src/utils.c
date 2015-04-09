@@ -38,11 +38,10 @@ long int countlines(char filename[])
 	return lines;
 }
 
-void read_options(int argc, char *argv[], double *n0, double *n1, double *n2, long int *seed, int *resume,
-				  int *popsize, int *datpopsize, int *help, char *filename, int *nlive)
+void read_options(int argc, char *argv[], RunArgs *args)
 {
 	int c;
-	static int resflag=0, helpflag=0;
+	static int resflag=0, helpflag=0, nstarflag=0, flatn0flag=0;
 	
 	while (1)
 	{
@@ -51,6 +50,8 @@ void read_options(int argc, char *argv[], double *n0, double *n1, double *n2, lo
 			/* These options set a flag. */
 			{"resume", no_argument, &resflag, 1},
 			{"help", no_argument, &helpflag, 1},
+			{"nstar", no_argument, &nstarflag, 1},
+			{"flatn0", no_argument, &flatn0flag, 1},
 			/* These options don’t set a flag. We distinguish them by their indices. */
 			{"n0", optional_argument, 0, 'n'},
 			{"n1", optional_argument, 0, 'm'},
@@ -74,28 +75,29 @@ void read_options(int argc, char *argv[], double *n0, double *n1, double *n2, lo
 		switch (c)
 		{
 			case 'n':
-				*n0 = atof(optarg);
+				args->n0 = atof(optarg);
 				break;
 			case 'm':
-				*n1 = atof(optarg);
+				args->n1 = atof(optarg);
 				break;
 			case 'l':
-				*n2 = atof(optarg);
+				args->n2 = atof(optarg);
 				break;
 			case 's':
-				*seed = atol(optarg);
+				args->seed = atol(optarg);
 				break;
 			case 'p':
-				*popsize = atoi(optarg);
+				args->popsize = atoi(optarg);
 				break;
 			case 'd':
-				*datpopsize = atoi(optarg);
+				args->datapopsize = atoi(optarg);
 				break;
 			case 'f':
-				strcpy(filename, optarg);
+				strcpy(args->datafile, optarg);
 				break;
 			case 'e':
-				*nlive = atoi(optarg);
+				args->nlive = atoi(optarg);
+				break;
 			case '?':
 				break;
 			default:
@@ -103,6 +105,8 @@ void read_options(int argc, char *argv[], double *n0, double *n1, double *n2, lo
 		}
 	}
 
-	*resume = resflag;
-	*help = helpflag;
+	args->resume = resflag;
+	args->help = helpflag;
+	if (nstarflag == 1) args->nstar = true;
+	if (flatn0flag == 1) args->flatn0 = true;
 }
