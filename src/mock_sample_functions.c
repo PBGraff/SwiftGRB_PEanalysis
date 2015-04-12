@@ -256,6 +256,7 @@ double redshift_distribution(long *seed)
 	double z;
 	Z_i = 1.0e-3;
   Z_f = 10.0;
+  // this needs to be re-done each time n0, n1, or n2 change
   if (Redshift_deno==-1.0) Redshift_deno = qromb(Rate_dz, Z_i, Z_f);
   Prob_Z = ran2d(seed);
   zbrac(Redshift_prob_func,&Z_i,&Z_f);

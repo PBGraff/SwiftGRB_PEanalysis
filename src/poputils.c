@@ -5,14 +5,17 @@
 #include <gsl/gsl_roots.h>
 
 #define NSPLINELD	1001
+#define NSPLINEEZ	1001
 #define NSPLINERR	10001
-gsl_interp_accel *accLD, *accRed;
-gsl_spline *splineLD, *splineRed;
+gsl_interp_accel *accLD, *accRed, *accEz, *accEzI;
+gsl_spline *splineLD, *splineRed, *splineEz, *splineEzI;
 
 void load_splines()
 {
 	long int i;
 	
+	// Luminosity distribution
+
 	accLD = gsl_interp_accel_alloc();
 	splineLD = gsl_spline_alloc(gsl_interp_cspline, NSPLINELD);
 	
@@ -26,6 +29,8 @@ void load_splines()
 	
 	gsl_spline_init(splineLD, z1, ld, NSPLINELD);
 
+	// Redshift distribution
+
 	accRed = gsl_interp_accel_alloc();
 	splineRed = gsl_spline_alloc(gsl_interp_cspline, NSPLINERR);
 
@@ -38,6 +43,24 @@ void load_splines()
 	fclose(fp2);
 
 	gsl_spline_init(splineRed, z2, red, NSPLINERR);
+
+	// E(z) cosmology
+
+	accEz = gsl_interp_accel_alloc();
+	splineEz = gsl_spline_alloc(gsl_interp_cspline, NSPLINEEZ);
+	accEzI = gsl_interp_accel_alloc();
+	splineEzI = gsl_spline_alloc(gsl_interp_cspline, NSPLINEEZ);
+
+	double z3[NSPLINEEZ], Ez[NSPLINEEZ], EzI[NSPLINEEZ];
+	FILE *fp3 = fopen("support_data/splines_Ez.txt","r");
+	for ( i=0; i<NSPLINEEZ; i++ )
+	{
+		fscanf(fp3, "%lf %lf %lf\n", &z3[i], &Ez[i], &EzI[i]);
+	}
+	fclose(fp3);
+
+	gsl_spline_init(splineEz, z3, Ez, NSPLINEEZ);
+	gsl_spline_init(splineEzI, z3, EzI, NSPLINEEZ);
 }
 
 void unload_splines()
@@ -47,6 +70,11 @@ void unload_splines()
 	
 	gsl_spline_free(splineRed);
 	gsl_interp_accel_free(accRed);
+
+	gsl_spline_free(splineEz);
+	gsl_interp_accel_free(accEz);
+	gsl_spline_free(splineEzI);
+	gsl_interp_accel_free(accEzI);
 }
 
 static inline double MAX(double v1, double v2)
@@ -279,3 +307,33 @@ double lum2flux_integral_numeric(double alpha, double beta, double Epeak, double
 
   	return result;
 }
+
+double Redshift_distribution_unnormalized(double z)
+{
+	if (z <= z1_global)
+	{
+		return pow(1.0 + z, n1_global);
+	} else {
+		return pow(1.0 + z1_global, n1_global - n2_global) * pow(1.0 + z, n2_global);
+	}
+}
+
+double Redshift_rejection_sampler(long int &seed)
+{
+	double Rzmax = Redshift_distribution_unnormalized(z1_global);
+	double z = 0.0, p, x;
+	for (;;)
+	{
+		z = ran2d(seed) * 10.0;
+		
+		p = Redshift_distribution_unnormalized(z) / Rzmax;
+
+		x = ran2d(seed);
+
+		if (x < p) break;
+	}
+
+	return z;
+}
+
+

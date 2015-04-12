@@ -3,11 +3,11 @@ import numpy as np
 import triangle
 
 # read in data and set true values
-datafile = 'chains/n0_flatprior/analysis_n0100_n1300_n2200_d10000_p10000_seed918_post_equal_weights.dat'
+datafile = 'chains/n0_flatprior/analysis_n0100_n1200_n2100_d10000_p10000_seed2985_post_equal_weights.dat'
 data = np.loadtxt(datafile, usecols=(0,1,2))
 n0_true = 1.00
-n1_true = 3.00
-n2_true = -2.00
+n1_true = 2.00
+n2_true = -1.00
 print data.shape
 
 # plot it
@@ -16,4 +16,4 @@ figure = triangle.corner(data, labels=[r'$n_0$',r'$n_1$',r'$n_2$'],
                          quantiles=[0.16, 0.5, 0.84], show_titles=True,
                          title_args={"fontsize": 12},
                          bins=30)
-figure.savefig("test_posterior_flatprior.png")
+figure.savefig("test_posterior_flatprior2.png")
