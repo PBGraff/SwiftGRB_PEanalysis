@@ -10,6 +10,14 @@
 gsl_interp_accel *accLD, *accRed, *accEz, *accEzI;
 gsl_spline *splineLD, *splineRed, *splineEz, *splineEzI;
 
+#define HUBBLECONST		0.7
+#define MPC_IN_M		3.08567758e22
+#define GPC_IN_M		3.08567758e25
+#define C_LIGHT			2.99792458e8
+#define H0				1e5 * HUBBLECONST / MPC_IN_M
+#define DH				C_LIGHT / H0
+#define DH3				DH * DH * DH
+
 void load_splines()
 {
 	long int i;
@@ -318,6 +326,11 @@ double Redshift_distribution_unnormalized(double z)
 	}
 }
 
+double Redshift_distribution_normalized(double z)
+{
+	return n0_global * Redshift_distribution_unnormalized(z);
+}
+
 double Redshift_rejection_sampler(long int &seed)
 {
 	double Rzmax = Redshift_distribution_unnormalized(z1_global);
@@ -336,4 +349,27 @@ double Redshift_rejection_sampler(long int &seed)
 	return z;
 }
 
+double Redshift_rescaled(double z, void *params)
+{
+	double Rprime = Redshift_distribution_normalized(z) / (1.0 + z);
 
+	Rprime *= DH3 / gsl_spline_eval(splineEz, z, accEz) * gsl_spline_eval(splineEzI, z, accEzI);
+
+	return Rprime;
+}
+
+double GRBNumberIntegral()
+{
+	double result, error;
+	unsigned long int neval;
+	gsl_function F;
+  	F.function = &Redshift_rescaled;
+  	F.params = NULL;
+
+  	gsl_set_error_handler_off();
+  	gsl_integration_qng(&F, 0.0, 10.0, 1e-7, 1e-6, &result, &error, &neval);
+
+  	result *= 4.0 * M_PI * obs_time_yrs_global;
+
+  	return result;
+}

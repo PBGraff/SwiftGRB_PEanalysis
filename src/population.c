@@ -96,7 +96,8 @@ void GeneratePopulation(double population[], int population_size, double n0, dou
 	{
 		//find z
 		do {
-			z = redshift_distribution(seed);
+			//z = redshift_distribution(seed);
+			z = Redshift_rejection_sampler(seed);
 		} while ( std::isnan(z)==1 );
 
 		//passing z to all the subroutines in mock_sample_functions.c

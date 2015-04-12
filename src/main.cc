@@ -233,6 +233,7 @@ int main(int argc, char *argv[])
 	runargs.nlive = 100;
 	runargs.nstar = false;
 	runargs.flatn0 = false;
+	runargs.tobs = 10.0;
 
 	long int dataseed=0;
 
@@ -264,6 +265,8 @@ Data Settings\n\
 Model Settings\n\
 -------------------------------------------------------------------------------------------------\n\
 --pop        population size for simulated models (optional, default=1000)\n\
+--nstar      use GRB rate at peak instead of rate at z=0\n\
+--flatn0     use flat prior (instead of log) on n0\n\
 \n";
 		printf("%s",helpstr);
 #ifdef PARALLEL

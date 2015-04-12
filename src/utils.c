@@ -61,6 +61,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"dpop", optional_argument, 0, 'd'},
 			{"file", optional_argument, 0, 'f'},
 			{"nlive", optional_argument, 0, 'e'},
+			{"tobs", optional_argument, 0, 't'},
 			{0, 0, 0, 0}
 		};
 
@@ -97,6 +98,9 @@ void read_options(int argc, char *argv[], RunArgs *args)
 				break;
 			case 'e':
 				args->nlive = atoi(optarg);
+				break;
+			case 't':
+				args->tobs = atoi(optarg);
 				break;
 			case '?':
 				break;
