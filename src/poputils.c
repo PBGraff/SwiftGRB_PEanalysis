@@ -14,8 +14,8 @@ gsl_spline *splineLD, *splineRed, *splineEz, *splineEzI;
 #define MPC_IN_M		3.08567758e22
 #define GPC_IN_M		3.08567758e25
 #define C_LIGHT			2.99792458e8
-#define H0				1e5 * HUBBLECONST / MPC_IN_M
-#define DH				C_LIGHT / H0 / GPC_IN_M
+#define HUBBLE0			1e5 * HUBBLECONST / MPC_IN_M
+#define DH				C_LIGHT / HUBBLE0 / GPC_IN_M
 #define DH3				DH * DH * DH
 
 void load_splines()
@@ -328,10 +328,10 @@ double Redshift_distribution_unnormalized(double z)
 
 double Redshift_distribution_normalized(double z)
 {
-	return n0_global * Redshift_distribution_unnormalized(z);
+	return runargs.n0 * Redshift_distribution_unnormalized(z);
 }
 
-double Redshift_rejection_sampler(long int &seed)
+double Redshift_rejection_sampler(long int *seed)
 {
 	double Rzmax = Redshift_distribution_unnormalized(Z1DATA);
 	double z = 0.0, p, x;
@@ -369,7 +369,7 @@ long int GRBNumberIntegral()
   	gsl_set_error_handler_off();
   	gsl_integration_qng(&F, 0.0, 10.0, 1e-7, 1e-6, &result, &error, &neval);
 
-  	result *= 4.0 * M_PI * obs_time_yrs_global;
+  	result *= 4.0 * M_PI * runargs.tobs;
 
   	return (long int) result;
 }

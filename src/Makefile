@@ -3,10 +3,11 @@ CBLASDIR = /opt/local
 CC = gcc-mp-4.8 -m64
 CXX = g++-mp-4.8 -m64
 FC = gfortran-mp-4.7 -m64
-CFLAGS += -I. -O3 -I$(CBLASDIR)/include/
-CXXFLAGS += -I. -O3 -I$(CBLASDIR)/include/
+CFLAGS += -I. -O3 -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
+CXXFLAGS += -I. -O3 -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
 FFLAGS += -w -O3
 LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
+LIBS =  -L/usr/local/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
 
 # NEMO
 #CC = gcc -DPARALLEL
@@ -16,10 +17,8 @@ LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
 #CXXFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
 #FFLAGS += -w -O3 -g
 #LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
-
-LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
-
-CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
+#LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+#CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
 
 export CC CXX FC CFLAGS CXXFLAGS FFLAGS
  

@@ -14,5 +14,11 @@ genpop:
 clean:
 	make -C src clean
 
+cleanall:
+	make -C src cleanall
+
 tidy:
 	make -C src tidy
+
+tidyall:
+	make -C src tidyall
