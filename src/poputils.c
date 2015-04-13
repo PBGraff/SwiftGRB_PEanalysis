@@ -15,7 +15,7 @@ gsl_spline *splineLD, *splineRed, *splineEz, *splineEzI;
 #define GPC_IN_M		3.08567758e25
 #define C_LIGHT			2.99792458e8
 #define H0				1e5 * HUBBLECONST / MPC_IN_M
-#define DH				C_LIGHT / H0
+#define DH				C_LIGHT / H0 / GPC_IN_M
 #define DH3				DH * DH * DH
 
 void load_splines()
@@ -318,11 +318,11 @@ double lum2flux_integral_numeric(double alpha, double beta, double Epeak, double
 
 double Redshift_distribution_unnormalized(double z)
 {
-	if (z <= z1_global)
+	if (z <= Z1DATA)
 	{
-		return pow(1.0 + z, n1_global);
+		return pow(1.0 + z, runargs.n1);
 	} else {
-		return pow(1.0 + z1_global, n1_global - n2_global) * pow(1.0 + z, n2_global);
+		return pow(1.0 + Z1DATA, runargs.n1 - runargs.n2) * pow(1.0 + z, runargs.n2);
 	}
 }
 
@@ -333,7 +333,7 @@ double Redshift_distribution_normalized(double z)
 
 double Redshift_rejection_sampler(long int &seed)
 {
-	double Rzmax = Redshift_distribution_unnormalized(z1_global);
+	double Rzmax = Redshift_distribution_unnormalized(Z1DATA);
 	double z = 0.0, p, x;
 	for (;;)
 	{
@@ -358,7 +358,7 @@ double Redshift_rescaled(double z, void *params)
 	return Rprime;
 }
 
-double GRBNumberIntegral()
+long int GRBNumberIntegral()
 {
 	double result, error;
 	unsigned long int neval;
@@ -371,5 +371,5 @@ double GRBNumberIntegral()
 
   	result *= 4.0 * M_PI * obs_time_yrs_global;
 
-  	return result;
+  	return (long int) result;
 }

@@ -1,21 +1,21 @@
 # MAC
-#CBLASDIR = /opt/local
-#CC = gcc-mp-4.8 -m64
-#CXX = g++-mp-4.8 -m64
-#FC = gfortran-mp-4.7 -m64
-#CFLAGS += -I. -O3 -I$(CBLASDIR)/include/
-#CXXFLAGS += -I. -O3 -I$(CBLASDIR)/include/
-#FFLAGS += -w -O3
-#LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
+CBLASDIR = /opt/local
+CC = gcc-mp-4.8 -m64
+CXX = g++-mp-4.8 -m64
+FC = gfortran-mp-4.7 -m64
+CFLAGS += -I. -O3 -I$(CBLASDIR)/include/
+CXXFLAGS += -I. -O3 -I$(CBLASDIR)/include/
+FFLAGS += -w -O3
+LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
 
 # NEMO
-CC = gcc -DPARALLEL
-CXX = g++ -DPARALLEL
-FC = gfortran -DMPI
-CFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
-CXXFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
-FFLAGS += -w -O3 -g
-LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
+#CC = gcc -DPARALLEL
+#CXX = g++ -DPARALLEL
+#FC = gfortran -DMPI
+#CFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
+#CXXFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
+#FFLAGS += -w -O3 -g
+#LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
 
 LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
 

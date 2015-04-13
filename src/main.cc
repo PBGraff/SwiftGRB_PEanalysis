@@ -296,6 +296,10 @@ Model Settings\n\
 	// load the splines
 	load_splines();
 
+	// calculate population size
+	long int popsize_calc = GRBNumberIntegral();
+	printf("Calculated population size of %ld\n", popsize_calc);
+
 	// allocate memory
 	population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
 	zpop = (double *) malloc(runargs.popsize * sizeof(double));
@@ -332,20 +336,20 @@ Model Settings\n\
 		zdata = (double *) malloc(runargs.datapopsize * sizeof(double));
 		float dprob;
 		GeneratePopulation(datapop, runargs.datapopsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
-		//FILE *fptr = fopen("junk","w");
+		FILE *fptr = fopen("population_test.txt","w");
 		for ( i=0; i<runargs.datapopsize; i++)
 		{
 			for ( j=0; j<NINPUTS; j++ )
 			{
 				sample[j] = (float) datapop[i*NINPUTS+j];
-				//fprintf(fptr,"%f ",sample[j]);
+				fprintf(fptr,"%f ",sample[j]);
 			}
 			GRBnn->forwardOne(1, &sample[0], &dprob);
 			dataprob[i] = (double) dprob;
-			//fprintf(fptr,"%f\n",dprob);
+			fprintf(fptr,"%f\n",dprob);
 			//printf("%f\n",dprob);
 		}
-		//fclose(fptr);
+		fclose(fptr);
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %d detected GRBs\n", (int) ndetdata);
 
