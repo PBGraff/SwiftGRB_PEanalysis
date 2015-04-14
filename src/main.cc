@@ -21,7 +21,7 @@ long int ndetdata=0, ndetpop;
 double *population=NULL, *zpop=NULL, *ppop=NULL, *zdetpop=NULL;
 float *sample=NULL;
 //double n0_data, n1_data, n2_data;
-double ksd, ksp;
+double ksd, ksp, logpois, logpois0 = 0.0;
 float prob;
 //int popsize, dpopsize;
 //bool nstar = false;
@@ -117,11 +117,11 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 
 	int i, j;
 
-	printf("----------------------------------------\n");
+	//printf("----------------------------------------\n");
 	
 	// calculate the population size
 	runargs.popsize = GRBNumberIntegral(n0, n1, n2);
-	printf("%lf %lf %lf ==> %ld\n", n0, n1, n2, runargs.popsize);
+	//printf("%lf %lf %lf ==> %ld\n", n0, n1, n2, runargs.popsize);
 	
 	// allocate memory
 	population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
@@ -153,11 +153,11 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
 
 	// Calculate Poisson probability for number count
-	double logpois = logPoisson((double) ndetpop, (double) ndetdata);
-	printf("%ld %ld ==> %lf\n", ndetpop, ndetdata, logpois);
+	logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
+	//printf("%ld %ld ==> %lf\n", ndetpop, ndetdata, logpois);
 
 	lnew = log(ksp) + logpois;
-	printf("%lf %lf ==> %lf\n", log(ksp), logpois, lnew);
+	//printf("%lf %lf ==> %lf\n", log(ksp), logpois, lnew);
 
 	// free memory
 	free(population);
@@ -329,6 +329,7 @@ Model Settings\n\
 		}
 		fclose(fptr);
 		printf("Data read in from file with %d detected GRBs.\n", (int) ndetdata);
+		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
 	}
 	else
 	{
@@ -364,6 +365,7 @@ Model Settings\n\
 		//fclose(fptr);
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %d detected GRBs\n", (int) ndetdata);
+		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
 		// free memory
 		free(datapop);
 		free(dataz);
@@ -390,7 +392,7 @@ Model Settings\n\
 		}
 		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
-		double logpois = logPoisson((double) ndetpop, (double) ndetdata);
+		logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
 		printf("Similar distribution has logL = %lf\n", log(ksp)+logpois);
 		// free memory
 		free(population);
