@@ -271,7 +271,7 @@ Data Settings\n\
 -------------------------------------------------------------------------------------------------\n\
 --seed       Initial seed for generating simulated data, will use later defined n0, n1, and n2\n\
              (default=0 reads in data from file)\n\
---dpop       population size for simulated data (optional, default=100)\n\
+--dpop       [deprecated] population size for simulated data (optional, default=100)\n\
 --n0         n0 for generated simulated data (optional, default=0.84)\n\
 --n1         n1 for generated simulated data (optional, default=2.07)\n\
 --n2         n2 for generated simulated data (optional, default=-0.7)\n\
@@ -279,7 +279,7 @@ Data Settings\n\
 \n\
 Model Settings\n\
 -------------------------------------------------------------------------------------------------\n\
---pop        population size for simulated models (optional, default=1000)\n\
+--pop        [deprecated] population size for simulated models (optional, default=1000)\n\
 --nstar      use GRB rate at peak instead of rate at z=0\n\
 --flatn0     use flat prior (instead of log) on n0\n\
 \n";

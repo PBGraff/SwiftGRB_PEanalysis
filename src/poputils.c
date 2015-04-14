@@ -7,8 +7,8 @@
 #define NSPLINELD	1001
 #define NSPLINEEZ	1001
 #define NSPLINERR	10001
-gsl_interp_accel *accLD, *accRed, *accEz, *accEzI;
-gsl_spline *splineLD, *splineRed, *splineEz, *splineEzI;
+gsl_interp_accel *accLD, *accRed, *accEz;
+gsl_spline *splineLD, *splineRed, *splineEz;
 
 #define MPC_IN_M		3.08567758e22
 #define GPC_IN_M		(1e3 * MPC_IN_M)
@@ -55,19 +55,16 @@ void load_splines()
 
 	accEz = gsl_interp_accel_alloc();
 	splineEz = gsl_spline_alloc(gsl_interp_cspline, NSPLINEEZ);
-	accEzI = gsl_interp_accel_alloc();
-	splineEzI = gsl_spline_alloc(gsl_interp_cspline, NSPLINEEZ);
 
-	double z3[NSPLINEEZ], Ez[NSPLINEEZ], EzI[NSPLINEEZ];
+	double z3[NSPLINEEZ], Ez[NSPLINEEZ], temp1, temp2;
 	FILE *fp3 = fopen("support_data/splines_Ez.txt","r");
 	for ( i=0; i<NSPLINEEZ; i++ )
 	{
-		fscanf(fp3, "%lf %lf %lf\n", &z3[i], &Ez[i], &EzI[i]);
+		fscanf(fp3, "%lf %lf %lf %lf\n", &z3[i], &temp1, &temp2, &Ez[i]);
 	}
 	fclose(fp3);
 
 	gsl_spline_init(splineEz, z3, Ez, NSPLINEEZ);
-	gsl_spline_init(splineEzI, z3, EzI, NSPLINEEZ);
 }
 
 void unload_splines()
@@ -80,8 +77,6 @@ void unload_splines()
 
 	gsl_spline_free(splineEz);
 	gsl_interp_accel_free(accEz);
-	gsl_spline_free(splineEzI);
-	gsl_interp_accel_free(accEzI);
 }
 
 static inline double MAX(double v1, double v2)
@@ -357,7 +352,7 @@ double Redshift_rescaled(double z, void *params)
 
 	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2) / (1.0 + z);
 
-	Rprime *= DH3 / gsl_spline_eval(splineEz, z, accEz) * gsl_spline_eval(splineEzI, z, accEzI);
+	Rprime *= DH3 * gsl_spline_eval(splineEz, z, accEz);
 
 	return Rprime;
 }
