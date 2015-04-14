@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.integrate import quad
 import matplotlib.pyplot as plt
 
 def Redshift(n0, n1, n2, z1=3.6, z=np.linspace(0,10,num=1001)):
@@ -22,15 +23,26 @@ plt.show()
 
 #### This computes E(z) and int_0^z dz'/E(z') and saves to file
 
+def Efunc(z):
+	# Omega_m = 0.3, Omega_lambda = 0.7, Omega_k = 0	
+	E = np.sqrt(0.3 * np.power((1 + z), 3) + 0.7)
+	return E
+
+def Efuncinv(z):
+	return 1.0 / Efunc(z)
+
 z = np.linspace(0,10,num=1001)
 dz = z[1] - z[0]
 
-# Omega_m = 0.3, Omega_lambda = 0.7, Omega_k = 0
-E = np.sqrt(0.3 * np.power((1 + z), 3) + 0.7)
+E = Efunc(z)
 
-Eics = np.square(np.cumsum(1.0 / E) * dz)
-Eics[1:] = Eics[:-1]
-Eics[0] = 0
+Eics = np.zeros(E.shape)
+for i in range(len(Eics)):
+	Eics[i] = (quad(Efuncinv, 0, z[i])[0])**2.0
+
+#Eics = np.square(np.cumsum(1.0 / E) * dz)
+#Eics[1:] = Eics[:-1]
+#Eics[0] = 0
 
 Eall = Eics / E;
 
