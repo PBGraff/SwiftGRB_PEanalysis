@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <gsl/gsl_randist.h>
 //#include "NNopt.h"
 #include "bambi.h"
 

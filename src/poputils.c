@@ -10,13 +10,12 @@
 gsl_interp_accel *accLD, *accRed, *accEz, *accEzI;
 gsl_spline *splineLD, *splineRed, *splineEz, *splineEzI;
 
-#define HUBBLECONST		0.7
 #define MPC_IN_M		3.08567758e22
-#define GPC_IN_M		3.08567758e25
+#define GPC_IN_M		(1e3 * MPC_IN_M)
 #define C_LIGHT			2.99792458e8
-#define HUBBLE0			1e5 * HUBBLECONST / MPC_IN_M
-#define DH				C_LIGHT / HUBBLE0 / GPC_IN_M
-#define DH3				DH * DH * DH
+#define HUBBLE0			(1e5 * 0.71 / MPC_IN_M)
+#define DH				(C_LIGHT / HUBBLE0 / GPC_IN_M)
+#define DH3				(DH * DH * DH)
 
 void load_splines()
 {
@@ -316,30 +315,30 @@ double lum2flux_integral_numeric(double alpha, double beta, double Epeak, double
   	return result;
 }
 
-double Redshift_distribution_unnormalized(double z)
+double Redshift_distribution_unnormalized(double z, double n1, double n2)
 {
 	if (z <= Z1DATA)
 	{
-		return pow(1.0 + z, runargs.n1);
+		return pow(1.0 + z, n1);
 	} else {
-		return pow(1.0 + Z1DATA, runargs.n1 - runargs.n2) * pow(1.0 + z, runargs.n2);
+		return pow(1.0 + Z1DATA, n1 - n2) * pow(1.0 + z, n2);
 	}
 }
 
-double Redshift_distribution_normalized(double z)
+double Redshift_distribution_normalized(double z, double n0, double n1, double n2)
 {
-	return runargs.n0 * Redshift_distribution_unnormalized(z);
+	return n0 * Redshift_distribution_unnormalized(z, n1, n2);
 }
 
-double Redshift_rejection_sampler(long int *seed)
+double Redshift_rejection_sampler(long int *seed, double n1, double n2)
 {
-	double Rzmax = Redshift_distribution_unnormalized(Z1DATA);
+	double Rzmax = Redshift_distribution_unnormalized(Z1DATA, n1, n2);
 	double z = 0.0, p, x;
 	for (;;)
 	{
 		z = ran2d(seed) * 10.0;
 		
-		p = Redshift_distribution_unnormalized(z) / Rzmax;
+		p = Redshift_distribution_unnormalized(z, n1, n2) / Rzmax;
 
 		x = ran2d(seed);
 
@@ -351,20 +350,27 @@ double Redshift_rejection_sampler(long int *seed)
 
 double Redshift_rescaled(double z, void *params)
 {
-	double Rprime = Redshift_distribution_normalized(z) / (1.0 + z);
+	double *pars = (double *) params;
+	double n0 = pars[0];
+	double n1 = pars[1];
+	double n2 = pars[2];
+
+	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2) / (1.0 + z);
 
 	Rprime *= DH3 / gsl_spline_eval(splineEz, z, accEz) * gsl_spline_eval(splineEzI, z, accEzI);
 
 	return Rprime;
 }
 
-long int GRBNumberIntegral()
+long int GRBNumberIntegral(double n0, double n1, double n2)
 {
+	double pars[3] = {n0, n1, n2};
+
 	double result, error;
 	unsigned long int neval;
 	gsl_function F;
   	F.function = &Redshift_rescaled;
-  	F.params = NULL;
+  	F.params = (void *) &pars[0];
 
   	gsl_set_error_handler_off();
   	gsl_integration_qng(&F, 0.0, 10.0, 1e-7, 1e-6, &result, &error, &neval);

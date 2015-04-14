@@ -15,8 +15,8 @@ typedef struct RunOptions {
 	double n2;
 	long int seed;
 	int resume;
-	int popsize;
-	int datapopsize;
+	long int popsize;
+	long int datapopsize;
 	int help;
 	char datafile[200];
 	int nlive;
@@ -33,5 +33,8 @@ long int countlines(char filename[]);
 
 // read command-line options
 void read_options(int argc, char **argv, RunArgs *args);
+
+// log of Poisson probability
+double logPoisson(double k, double lambda);
 
 #endif

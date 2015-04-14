@@ -40,7 +40,7 @@ void read_background_values()
 	fclose(bkgdfile);
 }
 
-void GeneratePopulation(double population[], int population_size, double n0, double n1, double n2, double z1,
+void GeneratePopulation(double population[], long int population_size, double n0, double n1, double n2, double z1,
 						double x, double y, double log_lum_star, double zpop[], long int *seed)
 {
 	/*
@@ -97,7 +97,7 @@ void GeneratePopulation(double population[], int population_size, double n0, dou
 		//find z
 		do {
 			//z = redshift_distribution(seed);
-			z = Redshift_rejection_sampler(seed);
+			z = Redshift_rejection_sampler(seed, n1, n2);
 		} while ( std::isnan(z)==1 );
 
 		//passing z to all the subroutines in mock_sample_functions.c

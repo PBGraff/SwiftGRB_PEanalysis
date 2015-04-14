@@ -114,3 +114,8 @@ void read_options(int argc, char *argv[], RunArgs *args)
 	if (nstarflag == 1) args->nstar = true;
 	if (flatn0flag == 1) args->flatn0 = true;
 }
+
+double logPoisson(double k, double lambda)
+{
+	return k * log(lambda) - lambda - (k * log(k) - k + 0.5 * log(2.0 * M_PI * k));
+}

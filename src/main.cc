@@ -116,8 +116,18 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	logLstar = Cube[6];
 
 	int i, j;
+
+	printf("----------------------------------------\n");
 	
-	//fprintf(stderr, "%lf %lf %lf %lf %lf %lf %lf\n", n0, n1, n2, z1, x, y, logLstar);
+	// calculate the population size
+	runargs.popsize = GRBNumberIntegral(n0, n1, n2);
+	printf("%lf %lf %lf ==> %ld\n", n0, n1, n2, runargs.popsize);
+	
+	// allocate memory
+	population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
+	zpop = (double *) malloc(runargs.popsize * sizeof(double));
+	ppop = (double *) malloc(runargs.popsize * sizeof(double));
+	zdetpop = (double *) malloc(runargs.popsize * sizeof(double));
 
 	// Make sample population
 	long int seed = (long int) time(NULL);
@@ -142,13 +152,18 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	// Calculate K-S test p-value
 	kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
 
-	lnew = log(ksp);
-	//lnew = 0.0;
+	// Calculate Poisson probability for number count
+	double logpois = logPoisson((double) ndetpop, (double) ndetdata);
+	printf("%ld %ld ==> %lf\n", ndetpop, ndetdata, logpois);
 
-	//double diff = (double) (clock() - timer);
-	//diff /= CLOCKS_PER_SEC;
+	lnew = log(ksp) + logpois;
+	printf("%lf %lf ==> %lf\n", log(ksp), logpois, lnew);
 
-	//fprintf(stderr, "sample generated with logL = %g in %g sec\n", lnew, diff);
+	// free memory
+	free(population);
+	free(zpop);
+	free(ppop);
+	free(zdetpop);
 }
 
 
@@ -233,7 +248,7 @@ int main(int argc, char *argv[])
 	runargs.nlive = 100;
 	runargs.nstar = false;
 	runargs.flatn0 = false;
-	runargs.tobs = 10.0;
+	runargs.tobs = 1.0;
 
 	long int dataseed=0;
 
@@ -296,15 +311,7 @@ Model Settings\n\
 	// load the splines
 	load_splines();
 
-	// calculate population size
-	long int popsize_calc = GRBNumberIntegral();
-	printf("Calculated population size of %ld\n", popsize_calc);
-
 	// allocate memory
-	population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
-	zpop = (double *) malloc(runargs.popsize * sizeof(double));
-	ppop = (double *) malloc(runargs.popsize * sizeof(double));
-	zdetpop = (double *) malloc(runargs.popsize * sizeof(double));
 	sample = (float *) malloc(NINPUTS * sizeof(float));
 
 	char outroot[100] = "";
@@ -325,35 +332,52 @@ Model Settings\n\
 	}
 	else
 	{
-		sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_d%d_p%d_seed%ld_", (int)round(fabs(runargs.n0*100)), 
-				(int)round(fabs(runargs.n1*100)), (int)round(fabs(runargs.n2*100)), runargs.datapopsize, runargs.popsize, runargs.seed);
+		sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_seed%ld_", (int)round(fabs(runargs.n0*100)), 
+				(int)round(fabs(runargs.n1*100)), (int)round(fabs(runargs.n2*100)), runargs.seed);
 		
 		// simulate data
+		// calculate population size
+		runargs.datapopsize = GRBNumberIntegral(runargs.n0, runargs.n1, runargs.n2);
+		printf("Calculated population size of %ld\n", runargs.datapopsize);
+		// allocate memory
 		double *datapop=NULL, *dataz=NULL, *dataprob=NULL;
 		datapop = (double *) malloc(runargs.datapopsize * NINPUTS * sizeof(double));
 		dataz = (double *) malloc(runargs.datapopsize * sizeof(double));
 		dataprob = (double *) malloc(runargs.datapopsize * sizeof(double));
 		zdata = (double *) malloc(runargs.datapopsize * sizeof(double));
 		float dprob;
+		// simulate population
 		GeneratePopulation(datapop, runargs.datapopsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
-		FILE *fptr = fopen("population_test.txt","w");
+		//FILE *fptr = fopen("population_test.txt","w");
 		for ( i=0; i<runargs.datapopsize; i++)
 		{
 			for ( j=0; j<NINPUTS; j++ )
 			{
 				sample[j] = (float) datapop[i*NINPUTS+j];
-				fprintf(fptr,"%f ",sample[j]);
+				//fprintf(fptr,"%f ",sample[j]);
 			}
 			GRBnn->forwardOne(1, &sample[0], &dprob);
 			dataprob[i] = (double) dprob;
-			fprintf(fptr,"%f\n",dprob);
+			//fprintf(fptr,"%f\n",dprob);
 			//printf("%f\n",dprob);
 		}
-		fclose(fptr);
+		//fclose(fptr);
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %d detected GRBs\n", (int) ndetdata);
+		// free memory
+		free(datapop);
+		free(dataz);
+		free(dataprob);
 
 		// simulate a similar population and evaluate the likelihood
+		// calculate the population size
+		runargs.popsize = runargs.datapopsize;
+		// allocate memory
+		population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
+		zpop = (double *) malloc(runargs.popsize * sizeof(double));
+		ppop = (double *) malloc(runargs.popsize * sizeof(double));
+		zdetpop = (double *) malloc(runargs.popsize * sizeof(double));
+		// simulate the population
 		GeneratePopulation(population, runargs.popsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, zpop, &dataseed);
 		for ( i=0; i<runargs.popsize; i++)
 		{
@@ -366,7 +390,13 @@ Model Settings\n\
 		}
 		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
-		printf("Similar distribution has logL = %lf\n", log(ksp));
+		double logpois = logPoisson((double) ndetpop, (double) ndetdata);
+		printf("Similar distribution has logL = %lf\n", log(ksp)+logpois);
+		// free memory
+		free(population);
+		free(zpop);
+		free(ppop);
+		free(zdetpop);
 	}
 	printf("Writing outputs to %s*\n", outroot);
 
@@ -430,8 +460,8 @@ Model Settings\n\
 
 	// clean up allocated variables
 	delete GRBnn;
-	free(zdata);free(population);free(zpop);
-	free(ppop);free(zdetpop);free(sample);
+	free(zdata);
+	free(sample);
 	unload_splines();
 	
 #ifdef PARALLEL
