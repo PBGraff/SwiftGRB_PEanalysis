@@ -57,6 +57,7 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 	if (runargs.nstar) {
 		double nstar = CubeToLogPrior(Cube[0], 1.00, 1000.0);
 		Cube[0] = nstar * pow(1.0 + Z1DATA, -Cube[1]);
+		Cube[7] = nstar;
 	} else {
 		if (runargs.flatn0) {
 			Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
@@ -417,6 +418,7 @@ Model Settings\n\
 	int ndims = 3;					// dimensionality (no. of free parameters)
 	
 	int nPar = 7;					// total no. of parameters including free & derived parameters
+	if (runargs.nstar) nPar++;
 	
 	int nClsPar = 3;				// no. of parameters to do mode separation on
 	

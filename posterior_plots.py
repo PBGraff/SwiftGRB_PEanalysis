@@ -3,7 +3,7 @@ import numpy as np
 import triangle
 
 # read in data and set true values
-datafile = 'chains/analysis_n0100_n1200_n2100_seed2985_post_equal_weights.dat'
+datafile = 'chains/analysis_n0100_n1200_n2100_seed4143_post_equal_weights.dat'
 data = np.loadtxt(datafile, usecols=(0,1,2))
 n0_true = 1.00
 n1_true = 2.00
