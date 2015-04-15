@@ -55,7 +55,7 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 
 	// n0
 	if (runargs.nstar) {
-		double nstar = CubeToLogPrior(Cube[0], 2.00, 900.0);
+		double nstar = CubeToLogPrior(Cube[0], 1.00, 1000.0);
 		Cube[0] = nstar * pow(1.0 + Z1DATA, -Cube[1]);
 	} else {
 		if (runargs.flatn0) {
