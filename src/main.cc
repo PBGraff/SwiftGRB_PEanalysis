@@ -394,7 +394,7 @@ Model Settings\n\
 		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
 		logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
-		printf("Similar distribution has logL = %lf\n", log(ksp)+logpois);
+		printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, log(ksp)+logpois);
 		// free memory
 		free(population);
 		free(zpop);
