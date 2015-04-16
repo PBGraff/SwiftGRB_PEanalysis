@@ -47,24 +47,48 @@ double CubeToLogPrior(double r, double xmin, double xmax)
 
 void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 {
-	// n1
-	Cube[1] = CubeToFlatPrior(Cube[1], 1.60, 4.00);
+	double n0, n1, n2, nstar, ntotal;
 
-	// n2
-	Cube[2] = CubeToFlatPrior(Cube[2], -4.00, 0.00);
+	// n1 from Cube[1]
+	n1 = CubeToFlatPrior(Cube[1], 1.60, 4.00);
 
-	// n0
+	// n2 from Cube[2]
+	n2 = CubeToFlatPrior(Cube[2], -4.00, 0.00);
+
+	// normalization parameters from Cube[0]
 	if (runargs.nstar) {
-		double nstar = CubeToLogPrior(Cube[0], 1.00, 1000.0);
-		Cube[0] = nstar * pow(1.0 + Z1DATA, -Cube[1]);
-		Cube[7] = nstar;
+		// nstar
+		nstar = CubeToLogPrior(Cube[0], 1.00, 1000.0);
+		// n0
+		n0 = nstar * pow(1.0 + Z1DATA, -n1);
+		// ntotal
+		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
+	} else if (runargs.ntotal) {
+		// ntotal
+		ntotal = CubeToLogPrior(Cube[0], 1.00, 1e4);
+		double ntmp = (double) GRBNumberIntegral(1.0, n1, n2);
+		// n0
+		n0 = ntotal / ntmp;
+		// nstar
+		nstar = n0 * pow(1.0 + Z1DATA, n1);
 	} else {
+		// n0
 		if (runargs.flatn0) {
-			Cube[0] = CubeToFlatPrior(Cube[0], 0.25, 2.00);
+			n0 = CubeToFlatPrior(Cube[0], 0.25, 2.00);
 		} else {
-			Cube[0] = CubeToLogPrior(Cube[0], 0.25, 2.00);
+			n0 = CubeToLogPrior(Cube[0], 0.25, 2.00);
 		}
+		// nstar
+		nstar = n0 * pow(1.0 + Z1DATA, n1);
+		// ntotal
+		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
 	}
+
+	Cube[0] = n0;
+	Cube[1] = n1;
+	Cube[2] = n2;
+	Cube[3] = nstar;
+	Cube[4] = ntotal;
 }
 
 /******************************************** getallparams routine ****************************************************/
@@ -74,16 +98,16 @@ void getallparams(double *Cube, int &ndim, int &nPar, void *context)
 	getphysparams(Cube,ndim,nPar,context);
 
 	// z1
-	Cube[3] = Z1DATA;
+	Cube[5] = Z1DATA;
 
 	// x
-	Cube[4] = XDATA;
+	Cube[6] = XDATA;
 
 	// y
-	Cube[5] = YDATA;
+	Cube[7] = YDATA;
 
 	// log10(L_star)
-	Cube[6] = LOGLSTARDATA;
+	Cube[8] = LOGLSTARDATA;
 }
 
 /******************************************** loglikelihood routine ****************************************************/
@@ -282,6 +306,7 @@ Model Settings\n\
 -------------------------------------------------------------------------------------------------\n\
 --pop        [deprecated] population size for simulated models (optional, default=1000)\n\
 --nstar      use GRB rate at peak instead of rate at z=0\n\
+--ntotal     use total intrinsic GRB pop size instead of rate at z=0\n\
 --flatn0     use flat prior (instead of log) on n0\n\
 \n";
 		printf("%s",helpstr);
@@ -340,7 +365,6 @@ Model Settings\n\
 		// simulate data
 		// calculate population size
 		runargs.datapopsize = GRBNumberIntegral(runargs.n0, runargs.n1, runargs.n2);
-		printf("Calculated population size of %ld\n", runargs.datapopsize);
 		// allocate memory
 		double *datapop=NULL, *dataz=NULL, *dataprob=NULL;
 		datapop = (double *) malloc(runargs.datapopsize * NINPUTS * sizeof(double));
@@ -365,7 +389,7 @@ Model Settings\n\
 		}
 		//fclose(fptr);
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
-		printf("Simulated data population generated with %d detected GRBs\n", (int) ndetdata);
+		printf("Simulated data population generated with %ld GRBs (%ld detected)\n", runargs.datapopsize, ndetdata);
 		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
 		// free memory
 		free(datapop);
@@ -417,8 +441,7 @@ Model Settings\n\
 	
 	int ndims = 3;					// dimensionality (no. of free parameters)
 	
-	int nPar = 7;					// total no. of parameters including free & derived parameters
-	if (runargs.nstar) nPar++;
+	int nPar = 9;					// total no. of parameters including free & derived parameters
 	
 	int nClsPar = 3;				// no. of parameters to do mode separation on
 	

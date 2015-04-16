@@ -41,7 +41,7 @@ long int countlines(char filename[])
 void read_options(int argc, char *argv[], RunArgs *args)
 {
 	int c;
-	static int resflag=0, helpflag=0, nstarflag=0, flatn0flag=0;
+	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0;
 	
 	while (1)
 	{
@@ -51,6 +51,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"resume", no_argument, &resflag, 1},
 			{"help", no_argument, &helpflag, 1},
 			{"nstar", no_argument, &nstarflag, 1},
+			{"ntotal", no_argument, &ntotalflag, 1},
 			{"flatn0", no_argument, &flatn0flag, 1},
 			/* These options don’t set a flag. We distinguish them by their indices. */
 			{"n0", optional_argument, 0, 'n'},
@@ -112,6 +113,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 	args->resume = resflag;
 	args->help = helpflag;
 	if (nstarflag == 1) args->nstar = true;
+	if (ntotalflag == 1) args->ntotal = true;
 	if (flatn0flag == 1) args->flatn0 = true;
 }
 

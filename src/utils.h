@@ -21,6 +21,7 @@ typedef struct RunOptions {
 	char datafile[200];
 	int nlive;
 	bool nstar;
+	bool ntotal;
 	bool flatn0;
 	double tobs;
 } RunArgs;
