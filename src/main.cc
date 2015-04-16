@@ -55,31 +55,22 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 	// n2 from Cube[2]
 	n2 = CubeToFlatPrior(Cube[2], -4.00, 0.00);
 
-	printf("%lf %lf ", n1, n2);
-
 	// normalization parameters from Cube[0]
 	if (runargs.nstar) {
 		// nstar
 		nstar = CubeToLogPrior(Cube[0], 1.00, 1000.0);
-		printf("%lf ", nstar);
 		// n0
 		n0 = nstar * pow(1.0 + Z1DATA, -n1);
-		printf("%lf ", n0);
 		// ntotal
 		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
-		printf("%lf ", ntotal);
 	} else if (runargs.ntotal) {
 		// ntotal
 		ntotal = CubeToLogPrior(Cube[0], 1.00, 1e4);
-		printf("%lf ", ntotal);
 		double ntmp = (double) GRBNumberIntegral(1.0, n1, n2);
-		printf("(%lf) ", ntmp);
 		// n0
 		n0 = ntotal / ntmp;
-		printf("%lf ", n0);
 		// nstar
 		nstar = n0 * pow(1.0 + Z1DATA, n1);
-		printf("%lf ", nstar);
 	} else {
 		// n0
 		if (runargs.flatn0) {
@@ -87,15 +78,11 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 		} else {
 			n0 = CubeToLogPrior(Cube[0], 0.25, 2.00);
 		}
-		printf("%lf ", n0);
 		// nstar
 		nstar = n0 * pow(1.0 + Z1DATA, n1);
-		printf("%lf ", nstar);
 		// ntotal
 		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
-		printf("%lf ", ntotal);
 	}
-	printf("\n");
 
 	Cube[0] = n0;
 	Cube[1] = n1;
