@@ -379,23 +379,32 @@ Model Settings\n\
 		float dprob;
 		// simulate population
 		GeneratePopulation(datapop, runargs.datapopsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
-		//FILE *fptr = fopen("population_test.txt","w");
 		for ( i=0; i<runargs.datapopsize; i++)
 		{
 			for ( j=0; j<NINPUTS; j++ )
 			{
 				sample[j] = (float) datapop[i*NINPUTS+j];
-				//fprintf(fptr,"%f ",sample[j]);
 			}
 			GRBnn->forwardOne(1, &sample[0], &dprob);
 			dataprob[i] = (double) dprob;
-			//fprintf(fptr,"%f\n",dprob);
-			//printf("%f\n",dprob);
 		}
-		//fclose(fptr);
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %ld GRBs (%ld detected)\n", runargs.datapopsize, ndetdata);
 		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
+		// if printing a test population
+		if (runargs.testpop)
+		{
+			FILE *fptr = fopen("population_test.txt","w");
+			for ( i=0; i<runargs.datapopsize; i++)
+			{
+				for ( j=0; j<NINPUTS; j++ )
+				{
+					fprintf(fptr, "%lf ", datapop[i*NINPUTS+j]);
+				}
+				fprintf(fptr, "%lf\n", dataprob[i]);
+			}
+			fclose(fptr);
+		}
 		// free memory
 		free(datapop);
 		free(dataz);
@@ -430,6 +439,15 @@ Model Settings\n\
 		free(ppop);
 		free(zdetpop);
 	}
+
+	if (runargs.testpop)
+	{
+#ifdef PARALLEL
+ 		MPI_Finalize();
+#endif
+ 		exit(0);
+	}
+
 	printf("Writing outputs to %s*\n", outroot);
 
 	// set the MultiNest sampling parameters

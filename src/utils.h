@@ -24,6 +24,7 @@ typedef struct RunOptions {
 	bool ntotal;
 	bool flatn0;
 	double tobs;
+	bool testpop;
 } RunArgs;
 
 // return an array of detected z from input array of z and detection prob, given a prob threshold

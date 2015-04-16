@@ -41,7 +41,7 @@ long int countlines(char filename[])
 void read_options(int argc, char *argv[], RunArgs *args)
 {
 	int c;
-	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0;
+	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0, testflag=0;
 	
 	while (1)
 	{
@@ -53,6 +53,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"nstar", no_argument, &nstarflag, 1},
 			{"ntotal", no_argument, &ntotalflag, 1},
 			{"flatn0", no_argument, &flatn0flag, 1},
+			{"test", no_argument, &testflag, 1},
 			/* These options don’t set a flag. We distinguish them by their indices. */
 			{"n0", optional_argument, 0, 'n'},
 			{"n1", optional_argument, 0, 'm'},
@@ -115,6 +116,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 	if (nstarflag == 1) args->nstar = true;
 	if (ntotalflag == 1) args->ntotal = true;
 	if (flatn0flag == 1) args->flatn0 = true;
+	if (testflag == 1) args->testpop = true;
 }
 
 double logPoisson(double k, double lambda)

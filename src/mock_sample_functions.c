@@ -644,9 +644,9 @@ double lum2flux (double alpha, double beta, double epeak, double liso, double z,
 
   ne_integral(alpha, beta, e0, band_start, band_stop, &ne_int_value);
 
-  flux_obs = A * ne_int_value * 1.6022e-9;
+  flux_obs = A * ne_int_value * 1.6022e-9;*/
 
-  *output_flux = flux_obs;*/
+  //*output_flux = flux_obs;
 
   /*double test = lum2flux_integral(alpha, beta, epeak, emin, emax);
   A = flux / (test * 1.6022e-9);
