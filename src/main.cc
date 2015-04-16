@@ -65,7 +65,7 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
 	} else if (runargs.ntotal) {
 		// ntotal
-		ntotal = CubeToLogPrior(Cube[0], 1.00, 1e4);
+		ntotal = CubeToLogPrior(Cube[0], 10.00, 1e4);
 		double ntmp = (double) GRBNumberIntegral(1.0, n1, n2);
 		// n0
 		n0 = ntotal / ntmp;
@@ -175,7 +175,12 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 
 	// Calculate K-S test p-value
-	kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
+	if (ndetpop == 0)
+	{
+		ksp = 1e-99;
+	} else {
+		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
+	}
 
 	// Calculate Poisson probability for number count
 	logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
