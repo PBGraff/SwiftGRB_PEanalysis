@@ -223,24 +223,6 @@ double Redshift_distribution_normalized(double z, double n0, double n1, double n
 	return n0 * Redshift_distribution_unnormalized(z, n1, n2);
 }
 
-double Redshift_rejection_sampler(long int *seed, double n1, double n2)
-{
-	double Rzmax = Redshift_distribution_unnormalized(Z1DATA, n1, n2);
-	double z = 0.0, p, x;
-	for (;;)
-	{
-		z = ran2d(seed) * 10.0;
-		
-		p = Redshift_distribution_unnormalized(z, n1, n2) / Rzmax;
-
-		x = ran2d(seed);
-
-		if (x < p) break;
-	}
-
-	return z;
-}
-
 double Redshift_rescaled(double z, void *params)
 {
 	double *pars = (double *) params;
@@ -253,6 +235,27 @@ double Redshift_rescaled(double z, void *params)
 	Rprime *= DH3 * gsl_spline_eval(splineEz, z, accEz);
 
 	return Rprime;
+}
+
+double Redshift_rejection_sampler(long int *seed, double n0, double n1, double n2)
+{
+	double pars[3] = {n0, n1, n2};
+	
+	double Rzmax = Redshift_rescaled(Z1DATA, (void *) &pars[0]);
+	
+	double z = 0.0, p, x;
+	for (;;)
+	{
+		z = ran2d(seed) * 10.0;
+		
+		p = Redshift_rescaled(z, (void *) &pars[0]) / Rzmax;
+
+		x = ran2d(seed);
+
+		if (x < p) break;
+	}
+
+	return z;
 }
 
 long int GRBNumberIntegral(double n0, double n1, double n2)

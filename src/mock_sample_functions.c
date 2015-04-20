@@ -223,11 +223,11 @@ double Redshift(double z)  //dN/dz from Wanderman et al. 2010
 double Rate_dz(double z) // number/yr/sr/redshift
 {
         double rate_dzdomega, rate_dzdomega2;
-        //rate_dzdomega=Cub(C/H0)*Squ(rcom(z))*rcomi(z)/(1.0+z)*Redshift(z)/Cub(Gpc2cm);
-        rate_dzdomega2 = gsl_spline_eval(splineRed, z, accRed) * Redshift(z);
+        rate_dzdomega=Cub(C/H0)*Squ(rcom(z))*rcomi(z)/(1.0+z)*Redshift(z)/Cub(Gpc2cm);
+        //rate_dzdomega2 = gsl_spline_eval(splineRed, z, accRed) * Redshift(z);
         //fprintf(stderr, "%g =?= %g\t(%g)\n", rate_dzdomega, rate_dzdomega2, (rate_dzdomega - rate_dzdomega2)/rate_dzdomega);
         //if ( fabs(rate_dzdomega-rate_dzdomega2)>1e-3 ) fprintf(stderr, "WRONG!\t%g\t%g\t%g\n", z, rate_dzdomega, rate_dzdomega2);
-        return rate_dzdomega2;
+        return rate_dzdomega;
 }
 
 double Rate_dz_part(double z) // number/yr/sr/redshift
@@ -257,7 +257,8 @@ double redshift_distribution(long *seed)
 	Z_i = 1.0e-3;
   Z_f = 10.0;
   // this needs to be re-done each time n0, n1, or n2 change
-  if (Redshift_deno==-1.0) Redshift_deno = qromb(Rate_dz, Z_i, Z_f);
+  //if (Redshift_deno==-1.0) 
+  Redshift_deno = qromb(Rate_dz, Z_i, Z_f);
   Prob_Z = ran2d(seed);
   zbrac(Redshift_prob_func,&Z_i,&Z_f);
   z=rtbis(Redshift_prob_func,Z_i,Z_f,1.0e-3);

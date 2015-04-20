@@ -24,8 +24,9 @@ plt.show()
 #### This computes E(z) and int_0^z dz'/E(z') and saves to file
 
 def Efunc(z):
-	# Omega_m = 0.3, Omega_lambda = 0.7, Omega_k = 0	
-	E = np.sqrt(0.3 * np.power((1 + z), 3) + 0.7)
+	Omega_m = 0.274
+	Omega_lambda = 0.726
+	E = np.sqrt(Omega_m * np.power((1 + z), 3) + Omega_lambda)
 	return E
 
 def Efuncinv(z):
@@ -57,7 +58,7 @@ np.savetxt('support_data/splines_Ez.txt',d,fmt='%0.9lf')
 
 z2, R = Redshift(0.84, 2.07, -0.7, z=z)
 
-Rp = R / (1+z) / E * Eics
+Rp = R / (1+z) * Eall
 
 plt.plot(z,Rp,'-k')
 plt.plot(z,R/(1+z),'--b')
