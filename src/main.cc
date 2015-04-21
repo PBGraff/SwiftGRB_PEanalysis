@@ -183,7 +183,9 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	}
 
 	// Calculate Poisson probability for number count
-	logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
+	//logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
+	logpois = logPoisson2((double) ndetpop, (double) ndetdata);
+	//printf("%lf vs %lf ==> %lf\n", logpois, logpois2, (logpois-logpois2)/logpois);
 	//printf("%ld %ld ==> %lf\n", ndetpop, ndetdata, logpois);
 
 	lnew = log(ksp) + logpois;

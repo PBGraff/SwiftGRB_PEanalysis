@@ -123,3 +123,8 @@ double logPoisson(double k, double lambda)
 {
 	return k * log(lambda) - lambda - (k * log(k) - k + 0.5 * log(2.0 * M_PI * k));
 }
+
+double logPoisson2(double k, double lambda)
+{
+	return (k + 0.5) * log(lambda / k) + (k - lambda);
+}

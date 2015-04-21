@@ -38,5 +38,6 @@ void read_options(int argc, char **argv, RunArgs *args);
 
 // log of Poisson probability
 double logPoisson(double k, double lambda);
+double logPoisson2(double k, double lambda);
 
 #endif
