@@ -74,9 +74,9 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 	} else {
 		// n0
 		if (runargs.flatn0) {
-			n0 = CubeToFlatPrior(Cube[0], 0.25, 2.00);
+			n0 = CubeToFlatPrior(Cube[0], 0.1, 2.00);
 		} else {
-			n0 = CubeToLogPrior(Cube[0], 0.25, 2.00);
+			n0 = CubeToLogPrior(Cube[0], 0.1, 2.00);
 		}
 		// nstar
 		nstar = n0 * pow(1.0 + Z1DATA, n1);
