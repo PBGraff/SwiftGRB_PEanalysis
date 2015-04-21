@@ -28,23 +28,26 @@ truths = [n0_true, n1_true, n2_true, nstar_true]
 
 extents = []
 for i in range(4):
-	vmin = np.min(truths[i], np.min(data1[:,i]))
+	tmp1 = [data1[:,i].min(), data2[:,i].min(), data3[:,i].min(), truths[i]]
+	tmp2 = [data1[:,i].max(), data2[:,i].max(), data3[:,i].max(), truths[i]]
+	extents.append((min(tmp1)*0.95, max(tmp2)*1.05))
+print extents
 
 # plot it
 figure = triangle.corner(data1, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
                          truths=truths, quantiles=[0.16, 0.5, 0.84], show_titles=True,
-                         title_args={"fontsize": 12}, bins=30)#,
-                         #extents=[(0.15,1.05), (1.9,3.5), (-1.5,-0.25), (16,22)])
+                         title_args={"fontsize": 12}, bins=30,
+                         extents=extents)
 figure.savefig("test_posterior_default_n0.png")
 
 figure = triangle.corner(data2, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
                          truths=truths, quantiles=[0.16, 0.5, 0.84], show_titles=True,
-                         title_args={"fontsize": 12}, bins=30)#,
-                         #extents=[(0.15,1.05), (1.9,3.5), (-1.5,-0.25), (16,22)])
+                         title_args={"fontsize": 12}, bins=30,
+                         extents=extents)
 figure.savefig("test_posterior_default_nstar.png")
 
 figure = triangle.corner(data3, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
                          truths=truths, quantiles=[0.16, 0.5, 0.84], show_titles=True,
-                         title_args={"fontsize": 12}, bins=30)#,
-                         #extents=[(0.15,1.05), (1.9,3.5), (-1.5,-0.25), (16,22)])
+                         title_args={"fontsize": 12}, bins=30,
+                         extents=extents)
 figure.savefig("test_posterior_default_ntotal.png")

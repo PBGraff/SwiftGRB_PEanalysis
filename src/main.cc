@@ -22,7 +22,7 @@ double *population=NULL, *zpop=NULL, *ppop=NULL, *zdetpop=NULL;
 float *sample=NULL;
 //double n0_data, n1_data, n2_data;
 double ksd, ksp, logpois, logpois0 = 0.0;
-float prob;
+float prob[2];
 //int popsize, dpopsize;
 //bool nstar = false;
 RunArgs runargs;
@@ -166,8 +166,8 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 		{
 			sample[j] = (float) population[i*NINPUTS+j];
 		}
-		GRBnn->forwardOne(1, &sample[0], &prob);
-		ppop[i] = (double) prob;
+		GRBnn->forwardOne(1, &sample[0], &prob[0]);
+		ppop[i] = (double) prob[1];
 		//printf("%f\n",prob);
 	}
 
@@ -376,7 +376,7 @@ Model Settings\n\
 		dataz = (double *) malloc(runargs.datapopsize * sizeof(double));
 		dataprob = (double *) malloc(runargs.datapopsize * sizeof(double));
 		zdata = (double *) malloc(runargs.datapopsize * sizeof(double));
-		float dprob;
+		float dprob[2];
 		// simulate population
 		GeneratePopulation(datapop, runargs.datapopsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
 		for ( i=0; i<runargs.datapopsize; i++)
@@ -385,8 +385,8 @@ Model Settings\n\
 			{
 				sample[j] = (float) datapop[i*NINPUTS+j];
 			}
-			GRBnn->forwardOne(1, &sample[0], &dprob);
-			dataprob[i] = (double) dprob;
+			GRBnn->forwardOne(1, &sample[0], &dprob[0]);
+			dataprob[i] = (double) dprob[1];
 		}
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %ld GRBs (%ld detected)\n", runargs.datapopsize, ndetdata);
@@ -426,8 +426,8 @@ Model Settings\n\
 			{
 				sample[j] = (float) population[i*NINPUTS+j];
 			}
-			GRBnn->forwardOne(1, &sample[0], &prob);
-			ppop[i] = (double) prob;
+			GRBnn->forwardOne(1, &sample[0], &prob[0]);
+			ppop[i] = (double) prob[1];
 		}
 		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
