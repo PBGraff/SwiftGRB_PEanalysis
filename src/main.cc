@@ -66,7 +66,7 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
 	} else if (runargs.ntotal) {
 		// ntotal
-		ntotal = CubeToLogPrior(Cube[0], 10.00, 1e4);
+		ntotal = CubeToLogPrior(Cube[0], 10.00, 3e4);
 		double ntmp = (double) GRBNumberIntegral(1.0, n1, n2);
 		// n0
 		n0 = ntotal / ntmp;
@@ -201,7 +201,7 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	{
 		logLnew += logPoisson3(popcount[i], detcount[i]);
 	}
-	logLnew /= (double) runargs.nbins;
+	//logLnew /= (double) runargs.nbins;
 	//printf("New logL = %lf\n", logLnew);
 
 	lnew = logLnew;
@@ -468,7 +468,7 @@ Model Settings\n\
 			logLnew += tmp;
 			//printf("%d %d %lf\n", detcount[i], popcount[i], tmp);
 		}
-		logLnew /= (double) runargs.nbins;
+		//logLnew /= (double) runargs.nbins;
 		//printf("New logL = %lf\n", logLnew);
 		printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, logLnew);
 		// free memory
