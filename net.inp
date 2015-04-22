@@ -13,7 +13,7 @@
 #confidence_rate_minimum
 0.01
 #iteration_print_frequency
-1
+10
 #fix_seed
 0
 #fixed_seed
@@ -25,7 +25,7 @@
 #whitenout
 1
 #max_iter
-250
+1000
 #convergence_function
 1
 #reset_alpha
@@ -33,6 +33,6 @@
 #reset_sigma
 0
 #logL_range
-100
+50
 #verbose
 3
