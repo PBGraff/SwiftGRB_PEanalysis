@@ -64,6 +64,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"file", optional_argument, 0, 'f'},
 			{"nlive", optional_argument, 0, 'e'},
 			{"tobs", optional_argument, 0, 't'},
+			{"bins", optional_argument, 0, 'b'},
 			{0, 0, 0, 0}
 		};
 
@@ -104,6 +105,9 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			case 't':
 				args->tobs = atoi(optarg);
 				break;
+			case 'b':
+				args->nbins = atoi(optarg);
+				break;
 			case '?':
 				break;
 			default:
@@ -127,4 +131,79 @@ double logPoisson(double k, double lambda)
 double logPoisson2(double k, double lambda)
 {
 	return (k + 0.5) * log(lambda / k) + (k - lambda);
+}
+
+double logPoisson3(double k, double lambda)
+{
+	double offset = 0.0;
+	if (lambda > 0)
+	{
+		offset = lambda * log(lambda) - lambda - logFactorial(lambda);
+	}
+
+	if (k == 0)
+	{
+		if (lambda == 0)
+		{
+			return 0.0;
+		}
+		else
+		{
+			return -lambda - offset;
+		}
+	}
+	else
+	{
+		if (lambda == 0)
+		{
+			return -logFactorial(k) - offset;
+		}
+		else
+		{
+			return k * log(lambda) - lambda - logFactorial(k) - offset;
+		}
+	}
+}
+
+void bindetections(double *zdet, long int ndet, double zmin, double zmax, int nbins, int *count)
+{
+	int i;
+	double dz = (zmax - zmin) / (nbins - 1);
+
+	// initialize counts to zero
+	for (i = 0; i < nbins; i++)
+	{
+		count[i] = 0;
+	}
+
+	int binid;
+	for (i = 0; i < ndet; i++)
+	{
+		binid = (int) floor(zdet[i] / dz);
+		count[binid]++;
+	}
+}
+
+double logFactorial(double x)
+{
+	if (x <= 7)
+	{
+		return log(factorial(x));
+	}
+	else
+	{
+		return x * log(x) - x + 0.5 * log(2.0*M_PI*x);
+	}
+}
+
+double factorial(double x)
+{
+	if (x == 0)
+	{
+		return 1.0;
+	}
+	else
+	{
+		return x * factorial(x - 1);
+	}
 }

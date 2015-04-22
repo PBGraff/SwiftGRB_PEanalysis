@@ -25,6 +25,7 @@ typedef struct RunOptions {
 	bool flatn0;
 	double tobs;
 	bool testpop;
+	int nbins;
 } RunArgs;
 
 // return an array of detected z from input array of z and detection prob, given a prob threshold
@@ -39,5 +40,12 @@ void read_options(int argc, char **argv, RunArgs *args);
 // log of Poisson probability
 double logPoisson(double k, double lambda);
 double logPoisson2(double k, double lambda);
+double logPoisson3(double k, double lambda);
+
+// bin detected GRB redshifts
+void bindetections(double *zdet, long int ndet, double zmin, double zmax, int nbins, int *count);
+
+double logFactorial(double x);
+double factorial(double x);
 
 #endif

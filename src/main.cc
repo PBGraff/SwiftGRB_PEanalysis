@@ -15,17 +15,18 @@ extern "C" {
 #define YDATA			-3.00
 #define LOGLSTARDATA	52.05
 
+#define ZMIN		0
+#define ZMAX		10
+
 NeuralNetwork *GRBnn;
 double *zdata=NULL;
 long int ndetdata=0, ndetpop;
 double *population=NULL, *zpop=NULL, *ppop=NULL, *zdetpop=NULL;
 float *sample=NULL;
-//double n0_data, n1_data, n2_data;
 double ksd, ksp, logpois, logpois0 = 0.0;
 float prob[2];
-//int popsize, dpopsize;
-//bool nstar = false;
 RunArgs runargs;
+int *detcount, *popcount;
 
 extern "C" {
 	#include "mock_sample_functions.c"
@@ -174,7 +175,7 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 
 	// Find detected GRBs in population
 	detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
-
+	/*
 	// Calculate K-S test p-value
 	if (ndetpop == 0)
 	{
@@ -192,6 +193,18 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	lnew = log(ksp) + logpois;
 	
 	//printf("%ld/%ld : %lf %lf ==> %lf\n", ndetpop, runargs.popsize, log(ksp), logpois, lnew);
+	*/
+	// new logL prep and calc
+	bindetections(zdetpop, ndetpop, ZMIN, ZMAX, runargs.nbins, popcount);
+	double logLnew = 0.0;
+	for (i = 0; i < runargs.nbins; i++)
+	{
+		logLnew += logPoisson3(popcount[i], detcount[i]);
+	}
+	logLnew /= (double) runargs.nbins;
+	//printf("New logL = %lf\n", logLnew);
+
+	lnew = logLnew;
 
 	// free memory
 	free(population);
@@ -283,6 +296,7 @@ int main(int argc, char *argv[])
 	runargs.nstar = false;
 	runargs.flatn0 = false;
 	runargs.tobs = 1.0;
+	runargs.nbins = 50;
 
 	long int dataseed=0;
 
@@ -300,6 +314,7 @@ Run Settings\n\
 -------------------------------------------------------------------------------------------------\n\
 --resume     Resume the run from before (default=off)\n\
 --nlive      Number of live points for BAMBI to use (default=100)\n\
+--bins       Number of bins to use in redshift for likelihood (default=50)\n\
 \n\
 Data Settings\n\
 -------------------------------------------------------------------------------------------------\n\
@@ -348,6 +363,8 @@ Model Settings\n\
 
 	// allocate memory
 	sample = (float *) malloc(NINPUTS * sizeof(float));
+	detcount = (int *) malloc(runargs.nbins * sizeof(int));
+	popcount = (int *) malloc(runargs.nbins * sizeof(int));
 
 	char outroot[100] = "";
 	if ( runargs.seed == 0 )
@@ -396,6 +413,8 @@ Model Settings\n\
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %ld GRBs (%ld detected)\n", runargs.datapopsize, ndetdata);
 		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
+		// new likelihood prep
+		bindetections(zdata, ndetdata, ZMIN, ZMAX, runargs.nbins, detcount);
 		// if printing a test population
 		if (runargs.testpop)
 		{
@@ -436,9 +455,22 @@ Model Settings\n\
 			ppop[i] = 1.0;
 		}
 		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
-		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
-		logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
-		printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, log(ksp)+logpois);
+		//kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
+		//logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
+		//logpois = logPoisson2((double) ndetpop, (double) ndetdata);
+		//printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, log(ksp)+logpois);
+		// new likelihood prep and calc
+		bindetections(zdetpop, ndetpop, ZMIN, ZMAX, runargs.nbins, popcount);
+		double logLnew = 0.0, tmp;
+		for (i = 0; i < runargs.nbins; i++)
+		{
+			tmp = logPoisson3(popcount[i], detcount[i]);
+			logLnew += tmp;
+			//printf("%d %d %lf\n", detcount[i], popcount[i], tmp);
+		}
+		logLnew /= (double) runargs.nbins;
+		//printf("New logL = %lf\n", logLnew);
+		printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, logLnew);
 		// free memory
 		free(population);
 		free(zpop);
@@ -518,6 +550,8 @@ Model Settings\n\
 	delete GRBnn;
 	free(zdata);
 	free(sample);
+	free(detcount);
+	free(popcount);
 	unload_splines();
 	
 #ifdef PARALLEL
