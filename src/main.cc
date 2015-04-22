@@ -167,7 +167,8 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 			sample[j] = (float) population[i*NINPUTS+j];
 		}
 		GRBnn->forwardOne(1, &sample[0], &prob[0]);
-		ppop[i] = (double) prob[1];
+		//ppop[i] = (double) prob[1];
+		ppop[i] = 1.0;
 		//printf("%f\n",prob);
 	}
 
@@ -189,7 +190,8 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	//printf("%ld %ld ==> %lf\n", ndetpop, ndetdata, logpois);
 
 	lnew = log(ksp) + logpois;
-	//printf("%lf %lf ==> %lf\n", log(ksp), logpois, lnew);
+	
+	//printf("%ld/%ld : %lf %lf ==> %lf\n", ndetpop, runargs.popsize, log(ksp), logpois, lnew);
 
 	// free memory
 	free(population);
@@ -388,7 +390,8 @@ Model Settings\n\
 				sample[j] = (float) datapop[i*NINPUTS+j];
 			}
 			GRBnn->forwardOne(1, &sample[0], &dprob[0]);
-			dataprob[i] = (double) dprob[1];
+			//dataprob[i] = (double) dprob[1];
+			dataprob[i] = 1.0;
 		}
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %ld GRBs (%ld detected)\n", runargs.datapopsize, ndetdata);
@@ -429,7 +432,8 @@ Model Settings\n\
 				sample[j] = (float) population[i*NINPUTS+j];
 			}
 			GRBnn->forwardOne(1, &sample[0], &prob[0]);
-			ppop[i] = (double) prob[1];
+			//ppop[i] = (double) prob[1];
+			ppop[i] = 1.0;
 		}
 		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 		kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);

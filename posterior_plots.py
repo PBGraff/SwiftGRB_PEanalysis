@@ -11,9 +11,9 @@ import triangle
 #n2_true = -1.00
 #extents=[(0.15,1.05), (1.9,3.5), (-1.5,-0.25), (16,22)]
 
-datafile1 = 'chains/analysis_n084_n1207_n270_seed7120_post_equal_weights.dat'
-datafile2 = 'chains/analysis_n084_n1207_n270_seed7121_post_equal_weights.dat'
-datafile3 = 'chains/analysis_n084_n1207_n270_seed7122_post_equal_weights.dat'
+datafile1 = 'chains/analysis_n084_n1207_n270_seed9641_phys_live.points'
+datafile2 = 'chains/analysis_n084_n1207_n270_seed9642_phys_live.points'
+datafile3 = 'chains/analysis_n084_n1207_n270_seed9643_phys_live.points'
 n0_true = 0.84
 n1_true = 2.07
 n2_true = -0.70
@@ -34,20 +34,29 @@ for i in range(4):
 print extents
 
 # plot it
-figure = triangle.corner(data1, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
+try:
+	figure = triangle.corner(data1, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
                          truths=truths, quantiles=[0.16, 0.5, 0.84], show_titles=True,
                          title_args={"fontsize": 12}, bins=30,
                          extents=extents)
-figure.savefig("test_posterior_default_n0.png")
+	figure.savefig("test_posterior_default_n0.png")
+except:
+	pass
 
-figure = triangle.corner(data2, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
+try:
+	figure = triangle.corner(data2, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
                          truths=truths, quantiles=[0.16, 0.5, 0.84], show_titles=True,
                          title_args={"fontsize": 12}, bins=30,
                          extents=extents)
-figure.savefig("test_posterior_default_nstar.png")
+	figure.savefig("test_posterior_default_nstar.png")
+except:
+	pass
 
-figure = triangle.corner(data3, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
+try:
+	figure = triangle.corner(data3, labels=[r'$n_0$',r'$n_1$',r'$n_2$',r'$n_{\ast}$'],
                          truths=truths, quantiles=[0.16, 0.5, 0.84], show_titles=True,
                          title_args={"fontsize": 12}, bins=30,
                          extents=extents)
-figure.savefig("test_posterior_default_ntotal.png")
+	figure.savefig("test_posterior_default_ntotal.png")
+except:
+	pass
