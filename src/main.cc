@@ -26,7 +26,8 @@ float *sample=NULL;
 double ksd, ksp, logpois, logpois0 = 0.0;
 float prob[2];
 RunArgs runargs;
-int *detcount, *popcount;
+int *detcount=NULL, *popcount=NULL;
+double *detfrac=NULL;
 
 extern "C" {
 	#include "mock_sample_functions.c"

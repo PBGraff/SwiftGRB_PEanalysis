@@ -5,6 +5,9 @@ all: main test genpop
 main:
 	make -C src main
 
+detfrac:
+	make -C src detfrac
+
 test:
 	make -C src test
 

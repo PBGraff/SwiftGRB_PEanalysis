@@ -40,8 +40,8 @@ void read_background_values()
 	fclose(bkgdfile);
 }
 
-void GeneratePopulation(double population[], long int population_size, double n0, double n1, double n2, double z1,
-						double x, double y, double log_lum_star, double zpop[], long int *seed)
+void GeneratePopulationFixZ(double population[], long int population_size, double z,
+							double x, double y, double log_lum_star, double zpop[], long int *seed)
 {
 	/*
 		Input parameters:
@@ -62,21 +62,14 @@ void GeneratePopulation(double population[], long int population_size, double n0
 		14 ndet 					number of detectors active
 	*/
 	
-	/* UNUSED variables
-	double Eiso, lum_peak, lum_t, log_E_min, log_E_max, log_E_peak, alpha_avg, alpha_sigma, beta_avg, beta_sigma;
-	double E_min, E_max, bgd_ran, lc_ran, lambdadata, qedata, time_start, time_end, N_t_bin_cal, Qe_max;
-	double E_peak_t, test, *time, *Qe_array;
-	int N_t_bin, bgd_ran_i,size, lc_ran_i, N_total;
-	*/
-	//long int seed = (long int) time(NULL);
-	double z, Log_lum, t_bin_obs, grid_r, grid_phi, lum, num_ran, alpha, beta, E_peak, flux_15_150, E0, t_bin, ndet_ran;
+	double Log_lum, t_bin_obs, grid_r, grid_phi, lum, num_ran, alpha, beta, E_peak, flux_15_150, E0, t_bin, ndet_ran;
 	int startid, ipop, i, ndet, angle;
 
 	// set global variables
-	rate_GRB_0_global = n0;
-	n1_global = n1;
-	n2_global = n2;
-	z1_global = z1;
+	rate_GRB_0_global = 1.0;
+	n1_global = 2.0;
+	n2_global = -1.0;
+	z1_global = 3.6;
 	alpha1_global = x;
 	beta1_global = y;
 	lum_star_global = pow(10.0, log_lum_star);
@@ -91,22 +84,12 @@ void GeneratePopulation(double population[], long int population_size, double n0
 	//time bin in obserbed frame
 	t_bin_obs = 1600.0*1.0e-3; //s
 
+	//passing z to all the subroutines in mock_sample_functions.c
+	Z_global = z;
+
 	//fprintf(stderr, "Done ");
 	for ( ipop=0; ipop<population_size; ipop++ )
 	{
-		//find z
-		do {
-			if (runargs.flatzpop) {
-				z = ran2d(seed) * (runargs.zbin_max - runargs.zbin_min) + runargs.zbin_min;
-			} else {
-				//z = redshift_distribution(seed);
-				z = Redshift_rejection_sampler(seed, n0, n1, n2);
-			}
-		} while ( std::isnan(z)==1 );
-
-		//passing z to all the subroutines in mock_sample_functions.c
-		Z_global = z;
-
 		//find grid-id
 		num_ran = 31.0*ran2d(seed);
 		angle = Angle_table(num_ran);
@@ -179,11 +162,5 @@ void GeneratePopulation(double population[], long int population_size, double n0
 		population[startid + 14] = 26884.0;
 
 		zpop[ipop] = z;
-
-		/*if ( (ipop + 1) % 100 == 0 )
-		{
-			fprintf(stderr, "%d / %d done\n", ipop+1, population_size);
-		}*/
 	}
-	//fprintf(stderr, "\n");
 }

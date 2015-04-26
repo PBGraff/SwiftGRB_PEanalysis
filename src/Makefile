@@ -1,32 +1,35 @@
 # MAC
-#CBLASDIR = /opt/local
-#CC = gcc-mp-4.8 -m64
-#CXX = g++-mp-4.8 -m64
-#FC = gfortran-mp-4.7 -m64
-#CFLAGS += -I. -O3 -g -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
-#CXXFLAGS += -I. -O3 -g -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
-#FFLAGS += -w -O3 -g
-#LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
-#LIBS =  -L/usr/local/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+CBLASDIR = /opt/local
+CC = gcc-mp-4.8 -m64
+CXX = g++-mp-4.8 -m64
+FC = gfortran-mp-4.7 -m64
+CFLAGS += -I. -O3 -g -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
+CXXFLAGS += -I. -O3 -g -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
+FFLAGS += -w -O3 -g
+LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
+LIBS =  -L/usr/local/lib -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+LIBS2 = -L/usr/local/lib -lbambi-1.2 -L$(CBLASDIR)/lib -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
 
 # NEMO
-CC = gcc -DPARALLEL
-CXX = g++ -DPARALLEL
-FC = gfortran -DMPI
-CFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
-CXXFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
-FFLAGS += -w -O3 -g
-LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
-LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
-CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
+#CC = gcc -DPARALLEL
+#CXX = g++ -DPARALLEL
+#FC = gfortran -DMPI
+#CFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
+#CXXFLAGS += -I. -g -O3 -I/home/pgraff/include -I/usr/include -I/usr/include/mpi
+#FFLAGS += -w -O3 -g
+#LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
+#LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+#LIBS2 = -L/home/pgraff/BAMBI -lbambi-1.2 -L/usr/lib -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+#CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
 
 export CC CXX FC CFLAGS CXXFLAGS FFLAGS
  
 OBJFILES = bambi.o utils.o main.o
+OBJFILES2 = utils.o detection_fraction.o
 
 default: all
 
-all: main test genpop
+all: main detfrac test genpop
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $*.c
@@ -43,11 +46,14 @@ nr:
 main: nr $(OBJFILES)
 	$(FC) $(FFLAGS) -o ../Analysis $(OBJFILES) $(LIBS)
 
+detfrac: nr $(OBJFILES2)
+	$(CXX) $(CFLAGS) -o ../DetectionFraction $(OBJFILES2) $(LIBS2)
+
 genpop: nr
 	$(CXX) $(CFLAGS) -o GenPop genPopTest.cc -Lnumerical_recipes_double -lnr -L/usr/lib -lgsl -lgslcblas
 
 clean:
-	rm -f *.o test ../Analysis GenPop
+	rm -f *.o test ../Analysis ../DetectionFraction GenPop
 
 cleanall: clean
 	make -C numerical_recipes_double clean

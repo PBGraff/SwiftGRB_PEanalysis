@@ -65,6 +65,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"nlive", optional_argument, 0, 'e'},
 			{"tobs", optional_argument, 0, 't'},
 			{"bins", optional_argument, 0, 'b'},
+			{"zpts", optional_argument, 0, 'z'},
 			{0, 0, 0, 0}
 		};
 
@@ -107,6 +108,9 @@ void read_options(int argc, char *argv[], RunArgs *args)
 				break;
 			case 'b':
 				args->nbins = atoi(optarg);
+				break;
+			case 'z':
+				args->zpts = atoi(optarg);
 				break;
 			case '?':
 				break;

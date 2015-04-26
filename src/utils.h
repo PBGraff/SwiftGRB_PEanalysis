@@ -26,6 +26,10 @@ typedef struct RunOptions {
 	double tobs;
 	bool testpop;
 	int nbins;
+	bool flatzpop;
+	double zbin_max;
+	double zbin_min;
+	int zpts;
 } RunArgs;
 
 // return an array of detected z from input array of z and detection prob, given a prob threshold
