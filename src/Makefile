@@ -19,7 +19,7 @@ LIBS2 = -L/usr/local/lib -lbambi-1.2 -L$(CBLASDIR)/lib -lstdc++ -Lnumerical_reci
 #FFLAGS += -w -O3 -g
 #LAPACKLIB = -L/usr/lib -L/home/pgraff/lib -lcblas -llapack -lmpi -lmpi_cxx -lmpi_f77
 #LIBS =  -L/home/pgraff/BAMBI -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
-#LIBS2 = -L/home/pgraff/BAMBI -lbambi-1.2 -L/usr/lib -L/home/pgraff/lib -lcblas -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+#LIBS2 = $(LIBS)
 #CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
 
 export CC CXX FC CFLAGS CXXFLAGS FFLAGS

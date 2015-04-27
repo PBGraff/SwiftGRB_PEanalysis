@@ -1,3 +1,6 @@
+#ifdef PARALLEL
+#include "mpi.h"
+#endif
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
@@ -43,7 +46,17 @@ extern "C" {
 
 int main(int argc, char *argv[])
 {
-	int i,j;
+#ifdef PARALLEL
+ 	MPI_Init(&argc,&argv);
+#endif
+
+	int myid = 0, ncpus = 1;
+#ifdef PARALLEL
+ 	MPI_Comm_size(MPI_COMM_WORLD,&ncpus);
+	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
+
+	int i,j,k;
 
 	// initialize default options for arguments
 	runargs.resume = 0;
@@ -111,16 +124,25 @@ Data Settings\n\
 	zdata = (double *) malloc(runargs.datapopsize * sizeof(double));
 	float dprob[2];
 
-	// open file for outputs
-	FILE *outfile = fopen("support_data/splines_detection_fraction_z.txt", "w");
-		
 	double dz = (ZMAX - ZMIN) / (double) (runargs.zpts - 1);
-	double z, detfrac = 0.0;
+	double *z = (double *) malloc(runargs.zpts * sizeof(double));
+	double *detfrac = (double *) malloc(runargs.zpts * sizeof(double));
 
-	for (z = ZMIN; z <= ZMAX; z += dz)
+	for (i = 0; i < runargs.zpts; i++)
+	{
+		z[i] = ZMIN + (double) i * dz;
+		detfrac[i] = 0.0;
+	}
+
+	int Nz = (int) ceil((double)runargs.zpts / (double) ncpus);
+	int zstart = myid * Nz;
+	int zend = (int) fmin((double)(myid+1)*Nz, (double)runargs.zpts);
+	printf("ID/Start/End = %d/%d/%d\n", myid, zstart, zend);
+
+	for (k = zstart; k < zend; k++)
 	{
 		// simulate population
-		GeneratePopulationFixZ(datapop, runargs.datapopsize, z, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
+		GeneratePopulationFixZ(datapop, runargs.datapopsize, z[k], XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
 
 		// pass through NN for detection prob
 		for ( i=0; i<runargs.datapopsize; i++)
@@ -136,16 +158,51 @@ Data Settings\n\
 		// find detected GRBs
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 
-		detfrac = (double) ndetdata / (double) runargs.datapopsize;
+		detfrac[k] = (double) ndetdata / (double) runargs.datapopsize;
 		
-		printf("Simulated %ld GRBs (%ld detected) at z=%g : %g%%\n", runargs.datapopsize, ndetdata, z, detfrac*100.0);
+		printf("Simulated %ld GRBs (%ld detected) at z=%g : %g%%\n", runargs.datapopsize, ndetdata, z[k], detfrac[k]*100.0);
 
-		fprintf(outfile, "%lf %lf\n", z, detfrac);	
+		//fprintf(outfile, "%lf %lf\n", z, detfrac);	
+	}
+
+	// collect all results at root node
+#ifdef PARALLEL
+	MPI_Barrier(MPI_COMM_WORLD);
+	if (myid != 0)
+	{
+		MPI_Send(&detfrac[zstart], zend - zstart, MPI_DOUBLE, 0, myid, MPI_COMM_WORLD);
+	}
+	else
+	{
+		for (i = 1; i<ncpus; i++)
+		{
+			int zstart_tmp = i * Nz;
+			int zend_tmp = (int) fmin((double)(i+1)*Nz, (double)runargs.zpts);
+			MPI_Status status;
+			MPI_Recv(&detfrac[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i, MPI_COMM_WORLD, &status);
+		}
+	}
+#endif
+	
+	// write results to file
+	if (myid == 0)
+	{
+		// open file for outputs
+		FILE *outfile = fopen("support_data/splines_detection_fraction_z.txt", "w");
+
+		// write results
+		for (i = 0; i < runargs.zpts; i++)
+		{
+			fprintf(outfile, "%lf %lf\n", z[i], detfrac[i]);
+		}
+
+		// close the file
+		fclose(outfile);	
 	}
 	
-	fclose(outfile);
-	
 	// clean up allocated variables
+	free(z);
+	free(detfrac);
 	free(datapop);
 	free(dataz);
 	free(dataprob);
@@ -153,6 +210,10 @@ Data Settings\n\
 	free(zdata);
 	free(sample);
 	unload_splines();
+
+#ifdef PARALLEL
+ 	MPI_Finalize();
+#endif
 
 	return 0;
 }
