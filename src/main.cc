@@ -511,7 +511,7 @@ Model Settings\n\
 		{
 			fprintf(datasave, "%lf\n", zdata[i]);
 		}
-		fclose(datasavefile);
+		fclose(datasave);
 		printf("Detected GRB redshifts saved to %s\n", datasavefile);
 	}
 
