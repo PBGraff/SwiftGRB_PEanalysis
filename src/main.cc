@@ -228,7 +228,7 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	{
 		lnew += log(GRBRate(zdata[i], n0, n1, n2));
 	}
-	printf("logL = %lf\n", lnew);
+	//printf("logL = %lf\n", lnew);
 }
 
 
