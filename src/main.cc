@@ -502,6 +502,17 @@ Model Settings\n\
 			logLnew += log(GRBRate(zdata[i], runargs.n0, runargs.n1, runargs.n2));
 		}
 		printf("New logL = %lf at true values\n", logLnew);
+
+		// save detected GRB redshifts
+		char datasavefile[200];
+		sprintf(datasavefile, "%sdetectedZdata.txt", outfile);
+		FILE *datasave = fopen(datasavefile, "w");
+		for (i = 0; i < ndetdata; i++)
+		{
+			fprintf(datasave, "%lf\n", zdata[i]);
+		}
+		fclose(datasavefile);
+		printf("Detected GRB redshifts saved to %s\n", datasavefile);
 	}
 
 	if (runargs.testpop)
