@@ -72,11 +72,11 @@ void load_splines()
 	accDF = gsl_interp_accel_alloc();
 	splineDF = gsl_spline_alloc(gsl_interp_cspline, NSPLINEDF);
 
-	double z4[NSPLINEDF], df[NSPLINEDF], temp1;
+	double z4[NSPLINEDF], df[NSPLINEDF], temp3;
 	FILE *fp4 = fopen("support_data/splines_detection_fraction_z.txt","r");
 	for ( i=0; i<NSPLINEDF; i++ )
 	{
-		fscanf(fp4, "%lf %lf %lf\n", &z4[i], &df[i], &temp1);
+		fscanf(fp4, "%lf %lf %lf\n", &z4[i], &df[i], &temp3);
 	}
 	fclose(fp4);
 
