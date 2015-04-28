@@ -137,7 +137,7 @@ Data Settings\n\
 	int Nz = (int) ceil((double)runargs.zpts / (double) ncpus);
 	int zstart = myid * Nz;
 	int zend = (int) fmin((double)(myid+1)*Nz, (double)runargs.zpts);
-	printf("ID/Start/End = %d/%d/%d\n", myid, zstart, zend);
+	printf("ID/Start/End = %d/%d/%d\n", myid, zstart, zend-1);
 
 	for (k = zstart; k < zend; k++)
 	{
