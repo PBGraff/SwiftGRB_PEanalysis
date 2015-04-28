@@ -505,7 +505,7 @@ Model Settings\n\
 
 		// save detected GRB redshifts
 		char datasavefile[200];
-		sprintf(datasavefile, "%sdetectedZdata.txt", outfile);
+		sprintf(datasavefile, "%sdetectedZdata.txt", outroot);
 		FILE *datasave = fopen(datasavefile, "w");
 		for (i = 0; i < ndetdata; i++)
 		{
