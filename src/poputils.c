@@ -7,8 +7,9 @@
 #define NSPLINELD	1001
 #define NSPLINEEZ	1001
 #define NSPLINERR	10001
-gsl_interp_accel *accLD, *accRed, *accEz;
-gsl_spline *splineLD, *splineRed, *splineEz;
+#define NSPLINEDF	10001
+gsl_interp_accel *accLD, *accRed, *accEz, *accDF;
+gsl_spline *splineLD, *splineRed, *splineEz, *splineDF;
 
 #define MPC_IN_M		3.08567758e22
 #define GPC_IN_M		(1e3 * MPC_IN_M)
@@ -65,6 +66,21 @@ void load_splines()
 	fclose(fp3);
 
 	gsl_spline_init(splineEz, z3, Ez, NSPLINEEZ);
+
+	// detection fraction (w.r.t z)
+
+	accDF = gsl_interp_accel_alloc();
+	splineDF = gsl_spline_alloc(gsl_interp_cspline, NSPLINEDF);
+
+	double z4[NSPLINEDF], df[NSPLINEDF];
+	FILE *fp4 = fopen("support_data/splines_detection_fraction_z.txt","r");
+	for ( i=0; i<NSPLINEDF; i++ )
+	{
+		fscanf(fp4, "%lf %lf\n", &z4[i], &df[i]);
+	}
+	fclose(fp4);
+
+	gsl_spline_init(splineDF, z4, df, NSPLINEDF);
 }
 
 void unload_splines()
@@ -77,6 +93,9 @@ void unload_splines()
 
 	gsl_spline_free(splineEz);
 	gsl_interp_accel_free(accEz);
+
+	gsl_spline_free(splineDF);
+	gsl_interp_accel_free(accDF);
 }
 
 static inline double MAX(double v1, double v2)
@@ -274,4 +293,41 @@ long int GRBNumberIntegral(double n0, double n1, double n2)
   	result *= 4.0 * M_PI * runargs.tobs;
 
   	return (long int) result;
+}
+
+double GRBRate(double z, double n0, double n1, double n2)
+{
+	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2) / (1.0 + z);
+
+	Rprime *= DH3 * gsl_spline_eval(splineEz, z, accEz);
+
+	Rprime *= 4.0 * M_PI * runargs.tobs * gsl_spline_eval(splineDF, z, accDF);
+
+	return Rprime;
+}
+
+double GRBRateFunc(double z, void *params)
+{
+	double *pars = (double *) params;
+	double n0 = pars[0];
+	double n1 = pars[1];
+	double n2 = pars[2];
+
+	return GRBRate(z, n0, n1, n2);
+}
+
+double GRBRateIntegral(double n0, double n1, double n2)
+{
+	double pars[3] = {n0, n1, n2};
+
+	double result, error;
+	unsigned long int neval;
+	gsl_function F;
+  	F.function = &GRBRateFunc;
+  	F.params = (void *) &pars[0];
+
+  	gsl_set_error_handler_off();
+  	gsl_integration_qng(&F, 0.0, 10.0, 1e-7, 1e-6, &result, &error, &neval);
+
+  	return result;
 }

@@ -132,7 +132,7 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	//clock_t timer = clock();
 
 	// Extract population parameters
-	getallparams(Cube,ndim,npars,context);
+	/*getallparams(Cube,ndim,npars,context);
 	double n0,n1,n2,z1,x,y,logLstar;
 	n0 = Cube[0];
 	n1 = Cube[1];
@@ -142,27 +142,27 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	y = Cube[7];
 	logLstar = Cube[8];
 
-	int i, j;
+	int i, j;*/
 
 	//printf("----------------------------------------\n");
 	
 	// calculate the population size
-	runargs.popsize = GRBNumberIntegral(n0, n1, n2);
+	//runargs.popsize = GRBNumberIntegral(n0, n1, n2);
 	//printf("%lf %lf %lf ==> %ld\n", n0, n1, n2, runargs.popsize);
 	
 	// allocate memory
-	population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
+	/*population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
 	zpop = (double *) malloc(runargs.popsize * sizeof(double));
 	ppop = (double *) malloc(runargs.popsize * sizeof(double));
-	zdetpop = (double *) malloc(runargs.popsize * sizeof(double));
+	zdetpop = (double *) malloc(runargs.popsize * sizeof(double));*/
 
 	// Make sample population
-	long int seed = (long int) time(NULL);
-	seed *= -34653;
-	GeneratePopulation(population, runargs.popsize, n0, n1, n2, z1, x, y, logLstar, zpop, &seed);
+	//long int seed = (long int) time(NULL);
+	//seed *= -34653;
+	//GeneratePopulation(population, runargs.popsize, n0, n1, n2, z1, x, y, logLstar, zpop, &seed);
 	
 	// Predict probability of detection for each GRB
-	for ( i=0; i<runargs.popsize; i++)
+	/*for ( i=0; i<runargs.popsize; i++)
 	{
 		for ( j=0; j<NINPUTS; j++ )
 		{
@@ -172,10 +172,10 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 		ppop[i] = (double) prob[1];
 		//ppop[i] = 1.0;
 		//printf("%f\n",prob);
-	}
+	}*/
 
 	// Find detected GRBs in population
-	detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
+	//detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
 	/*
 	// Calculate K-S test p-value
 	if (ndetpop == 0)
@@ -196,7 +196,7 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	//printf("%ld/%ld : %lf %lf ==> %lf\n", ndetpop, runargs.popsize, log(ksp), logpois, lnew);
 	*/
 	// new logL prep and calc
-	bindetections(zdetpop, ndetpop, ZMIN, ZMAX, runargs.nbins, popcount);
+	/*bindetections(zdetpop, ndetpop, ZMIN, ZMAX, runargs.nbins, popcount);
 	double logLnew = 0.0;
 	for (i = 0; i < runargs.nbins; i++)
 	{
@@ -211,7 +211,24 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	free(population);
 	free(zpop);
 	free(ppop);
-	free(zdetpop);
+	free(zdetpop);*/
+
+	// new logL that doesn't incorporate a simulated population
+	// Extract population parameters
+	getallparams(Cube,ndim,npars,context);
+	double n0,n1,n2;
+	n0 = Cube[0];
+	n1 = Cube[1];
+	n2 = Cube[2];
+
+	// compute logL as in notes
+	lnew = -1.0 * GRBRateIntegral(n0, n1, n2);
+	int i;
+	for (i = 0; i < ndetdata; i++)
+	{
+		lnew += log(GRBRate(zdata[i], n0, n1, n2));
+	}
+	printf("logL = %lf\n", lnew);
 }
 
 
@@ -435,7 +452,7 @@ Model Settings\n\
 		free(dataz);
 		free(dataprob);
 
-		// simulate a similar population and evaluate the likelihood
+		/* // simulate a similar population and evaluate the likelihood
 		// calculate the population size
 		runargs.popsize = runargs.datapopsize;
 		// allocate memory
@@ -476,7 +493,15 @@ Model Settings\n\
 		free(population);
 		free(zpop);
 		free(ppop);
-		free(zdetpop);
+		free(zdetpop);*/
+
+		// calculate new logL function at true values
+		double logLnew = -1.0 * GRBRateIntegral(runargs.n0, runargs.n1, runargs.n2);
+		for (i = 0; i < ndetdata; i++)
+		{
+			logLnew += log(GRBRate(zdata[i], runargs.n0, runargs.n1, runargs.n2));
+		}
+		printf("New logL = %lf at true values\n", logLnew);
 	}
 
 	if (runargs.testpop)
