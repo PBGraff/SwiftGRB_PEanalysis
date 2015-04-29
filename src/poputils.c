@@ -277,7 +277,7 @@ double Redshift_rejection_sampler(long int *seed, double n0, double n1, double n
 	return z;
 }
 
-long int GRBNumberIntegral(double n0, double n1, double n2)
+double GRBNumberIntegral(double n0, double n1, double n2)
 {
 	double pars[3] = {n0, n1, n2};
 
@@ -288,11 +288,11 @@ long int GRBNumberIntegral(double n0, double n1, double n2)
   	F.params = (void *) &pars[0];
 
   	gsl_set_error_handler_off();
-  	gsl_integration_qng(&F, 0.0, 10.0, 1e-7, 1e-6, &result, &error, &neval);
+  	gsl_integration_qng(&F, ZMIN, ZMAX, 1e-7, 1e-6, &result, &error, &neval);
 
-  	result *= 4.0 * M_PI * runargs.tobs;
+  	result *= 4.0 * M_PI;
 
-  	return (long int) result;
+  	return result;
 }
 
 double GRBRate(double z, double n0, double n1, double n2)
@@ -301,7 +301,7 @@ double GRBRate(double z, double n0, double n1, double n2)
 
 	Rprime *= DH3 * gsl_spline_eval(splineEz, z, accEz);
 
-	Rprime *= 4.0 * M_PI * runargs.tobs * gsl_spline_eval(splineDF, z, accDF);
+	Rprime *= 4.0 * M_PI * runargs.tobs * gsl_spline_eval(splineDF, z, accDF) / 6.0;
 
 	return Rprime;
 }
@@ -327,7 +327,7 @@ double GRBRateIntegral(double n0, double n1, double n2)
   	F.params = (void *) &pars[0];
 
   	gsl_set_error_handler_off();
-  	gsl_integration_qng(&F, 0.0, 10.0, 1e-7, 1e-6, &result, &error, &neval);
+  	gsl_integration_qng(&F, ZMIN, ZMAX, 1e-7, 1e-6, &result, &error, &neval);
 
   	return result;
 }

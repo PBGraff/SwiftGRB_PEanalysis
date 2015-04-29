@@ -15,8 +15,8 @@ extern "C" {
 #define YDATA			-3.00
 #define LOGLSTARDATA	52.05
 
-#define ZMIN		0
-#define ZMAX		10
+#define ZMIN		0.0
+#define ZMAX		10.0
 
 NeuralNetwork *GRBnn;
 double *zdata=NULL;
@@ -64,11 +64,11 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 		// n0
 		n0 = nstar * pow(1.0 + Z1DATA, -n1);
 		// ntotal
-		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
+		ntotal = GRBNumberIntegral(n0, n1, n2);
 	} else if (runargs.ntotal) {
 		// ntotal
 		ntotal = CubeToLogPrior(Cube[0], 10.00, 3e4);
-		double ntmp = (double) GRBNumberIntegral(1.0, n1, n2);
+		double ntmp = GRBNumberIntegral(1.0, n1, n2);
 		// n0
 		n0 = ntotal / ntmp;
 		// nstar
@@ -83,7 +83,7 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 		// nstar
 		nstar = n0 * pow(1.0 + Z1DATA, n1);
 		// ntotal
-		ntotal = (double) GRBNumberIntegral(n0, n1, n2);
+		ntotal = GRBNumberIntegral(n0, n1, n2);
 	}
 
 	Cube[0] = n0;
@@ -222,13 +222,20 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	n2 = Cube[2];
 
 	// compute logL as in notes
-	lnew = -1.0 * GRBRateIntegral(n0, n1, n2);
-	int i;
-	for (i = 0; i < ndetdata; i++)
+	if (runargs.zeroLogLike)
 	{
-		lnew += log(GRBRate(zdata[i], n0, n1, n2));
+		lnew = 0.0;
 	}
-	//printf("logL = %lf\n", lnew);
+	else
+	{
+		lnew = -1.0 * GRBRateIntegral(n0, n1, n2);
+		int i;
+		for (i = 0; i < ndetdata; i++)
+		{
+			lnew += log(GRBRate(zdata[i], n0, n1, n2));
+		}
+		//printf("logL = %lf\n", lnew);
+	}
 }
 
 
@@ -303,7 +310,7 @@ int main(int argc, char *argv[])
 	// initialize default options for arguments
 	runargs.resume = 0;
 	runargs.help = 0;
-	runargs.n0 = 0.84;
+	runargs.n0 = 0.42;
 	runargs.n1 = 2.07;
 	runargs.n2 = -0.7;
 	runargs.popsize = 1000;
@@ -313,8 +320,11 @@ int main(int argc, char *argv[])
 	runargs.nlive = 100;
 	runargs.nstar = false;
 	runargs.flatn0 = false;
-	runargs.tobs = 1.0;
+	runargs.tobs = 0.8;
 	runargs.nbins = 50;
+	runargs.zeroLogLike = false;
+	strcpy(runargs.outfile,"");
+	runargs.verbose = 1;
 
 	long int dataseed=0;
 
@@ -330,26 +340,29 @@ This program runs BAMBI on the Swift GRB population-fitting problem. Here are av
 \n\
 Run Settings\n\
 -------------------------------------------------------------------------------------------------\n\
---resume     Resume the run from before (default=off)\n\
---nlive      Number of live points for BAMBI to use (default=100)\n\
---bins       Number of bins to use in redshift for likelihood (default=50)\n\
+--resume         Resume the run from before (default=off)\n\
+--nlive          Number of live points for BAMBI to use (default=100)\n\
+--bins           [deprecated] Number of bins to use in redshift for likelihood (default=50)\n\
+--zeroLogLike    Sample form prior with logL=0\n\
+--outfile        Root for output files\n\
+--silent         Suppress BAMBI updates to stdout\n\
 \n\
 Data Settings\n\
 -------------------------------------------------------------------------------------------------\n\
---seed       Initial seed for generating simulated data, will use later defined n0, n1, and n2\n\
-             (default=0 reads in data from file)\n\
---dpop       [deprecated] population size for simulated data (optional, default=100)\n\
---n0         n0 for generated simulated data (optional, default=0.84)\n\
---n1         n1 for generated simulated data (optional, default=2.07)\n\
---n2         n2 for generated simulated data (optional, default=-0.7)\n\
---file       data file to be read in (optional for when seed=0)\n\
+--seed           Initial seed for generating simulated data, will use later defined n0, n1, and n2\n\
+                 (default=0 reads in data from file)\n\
+--dpop           [deprecated] population size for simulated data (optional, default=100)\n\
+--n0             n0 for generated simulated data (optional, default=0.84)\n\
+--n1             n1 for generated simulated data (optional, default=2.07)\n\
+--n2             n2 for generated simulated data (optional, default=-0.7)\n\
+--file           data file to be read in (optional for when seed=0)\n\
 \n\
 Model Settings\n\
 -------------------------------------------------------------------------------------------------\n\
---pop        [deprecated] population size for simulated models (optional, default=1000)\n\
---nstar      use GRB rate at peak instead of rate at z=0\n\
---ntotal     use total intrinsic GRB pop size instead of rate at z=0\n\
---flatn0     use flat prior (instead of log) on n0\n\
+--pop            [deprecated] population size for simulated models (optional, default=1000)\n\
+--nstar          use GRB rate at peak instead of rate at z=0\n\
+--ntotal         use total intrinsic GRB pop size instead of rate at z=0\n\
+--flatn0         use flat prior (instead of log) on n0\n\
 \n";
 		printf("%s",helpstr);
 #ifdef PARALLEL
@@ -403,12 +416,21 @@ Model Settings\n\
 	}
 	else
 	{
-		sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_seed%ld_", (int)round(fabs(runargs.n0*100)), 
-				(int)round(fabs(runargs.n1*100)), (int)round(fabs(runargs.n2*100)), runargs.seed);
+		if (strlen(runargs.outfile)==0)
+		{
+			sprintf(outroot, "chains/analysis_n0%d_n1%d_n2%d_seed%ld_", (int)round(fabs(runargs.n0*100)), 
+					(int)round(fabs(runargs.n1*100)), (int)round(fabs(runargs.n2*100)), runargs.seed);
+		}
+		else
+		{
+			strcpy(outroot, runargs.outfile);
+		}
 		
 		// simulate data
 		// calculate population size
-		runargs.datapopsize = GRBNumberIntegral(runargs.n0, runargs.n1, runargs.n2);
+		double all_sky_rate = GRBNumberIntegral(runargs.n0, runargs.n1, runargs.n2);
+		printf("Computed an all-sky intrinsic rate of %lf GRBs/yr.\n", all_sky_rate);
+		runargs.datapopsize = (long int) (all_sky_rate * runargs.tobs / 6.0);
 		// allocate memory
 		double *datapop=NULL, *dataz=NULL, *dataprob=NULL;
 		datapop = (double *) malloc(runargs.datapopsize * NINPUTS * sizeof(double));
@@ -429,7 +451,7 @@ Model Settings\n\
 			//dataprob[i] = 1.0;
 		}
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
-		printf("Simulated data population generated with %ld GRBs (%ld detected)\n", runargs.datapopsize, ndetdata);
+		printf("Simulated data population generated with %ld GRBs => %ld detected\n", runargs.datapopsize, ndetdata);
 		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
 		// new likelihood prep
 		bindetections(zdata, ndetdata, ZMIN, ZMAX, runargs.nbins, detcount);
@@ -513,6 +535,14 @@ Model Settings\n\
 		}
 		fclose(datasave);
 		printf("Detected GRB redshifts saved to %s\n", datasavefile);
+
+		// save injected true values
+		sprintf(datasavefile, "%sinjected_values.txt", outroot);
+		datasave = fopen(datasavefile, "w");
+		fprintf(datasave, "%lf\n%lf\n%lf\n%lf\n%lf\n", runargs.n0, runargs.n1, runargs.n2, 
+				runargs.n0 * pow(1.0 + Z1DATA, runargs.n1), all_sky_rate);
+		fclose(datasave);
+		printf("Injected values saved to %s\n", datasavefile);
 	}
 
 	if (runargs.testpop)
@@ -558,7 +588,7 @@ Model Settings\n\
 	
 	int seed = -1;					// random no. generator seed, if < 0 then take the seed from system clock
 	
-	int fb = 1;					// need feedback on standard output?
+	int fb = runargs.verbose;					// need feedback on standard output?
 	
 	resume = runargs.resume;					// resume from a previous job?
 	

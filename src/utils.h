@@ -30,6 +30,9 @@ typedef struct RunOptions {
 	double zbin_max;
 	double zbin_min;
 	int zpts;
+	bool zeroLogLike;
+	char outfile[200];
+	int verbose;
 } RunArgs;
 
 // return an array of detected z from input array of z and detection prob, given a prob threshold

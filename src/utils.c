@@ -41,7 +41,7 @@ long int countlines(char filename[])
 void read_options(int argc, char *argv[], RunArgs *args)
 {
 	int c;
-	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0, testflag=0;
+	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0, testflag=0, zllflag=0, verboseflag=1;
 	
 	while (1)
 	{
@@ -54,6 +54,8 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"ntotal", no_argument, &ntotalflag, 1},
 			{"flatn0", no_argument, &flatn0flag, 1},
 			{"test", no_argument, &testflag, 1},
+			{"zeroLogLike", no_argument, &zllflag, 1},
+			{"silent", no_argument, &verboseflag, 0},
 			/* These options don’t set a flag. We distinguish them by their indices. */
 			{"n0", optional_argument, 0, 'n'},
 			{"n1", optional_argument, 0, 'm'},
@@ -66,6 +68,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"tobs", optional_argument, 0, 't'},
 			{"bins", optional_argument, 0, 'b'},
 			{"zpts", optional_argument, 0, 'z'},
+			{"outfile", optional_argument, 0, 'o'},
 			{0, 0, 0, 0}
 		};
 
@@ -112,6 +115,10 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			case 'z':
 				args->zpts = atoi(optarg);
 				break;
+				break;
+			case 'o':
+				strcpy(args->outfile,optarg);
+				break;
 			case '?':
 				break;
 			default:
@@ -125,6 +132,8 @@ void read_options(int argc, char *argv[], RunArgs *args)
 	if (ntotalflag == 1) args->ntotal = true;
 	if (flatn0flag == 1) args->flatn0 = true;
 	if (testflag == 1) args->testpop = true;
+	if (zllflag == 1) args->zeroLogLike = true;
+	args->verbose = verboseflag;
 }
 
 double logPoisson(double k, double lambda)
