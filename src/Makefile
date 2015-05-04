@@ -26,6 +26,7 @@ export CC CXX FC CFLAGS CXXFLAGS FFLAGS
  
 OBJFILES = bambi.o utils.o main.o
 OBJFILES2 = utils.o detection_fraction.o
+OBJFILES3 = utils.o detection_fraction_RF.o
 
 default: all
 
@@ -48,6 +49,9 @@ main: nr $(OBJFILES)
 
 detfrac: nr $(OBJFILES2)
 	$(CXX) $(CFLAGS) -o ../DetectionFraction $(OBJFILES2) $(LIBS2)
+
+rfdetfrac: nr $(OBJFILES3)
+	$(CXX) $(CFLAGS) -o ../RFDetectionFraction $(OBJFILES3) $(LIBS2)
 
 genpop: nr
 	$(CXX) $(CFLAGS) -o GenPop genPopTest.cc -Lnumerical_recipes_double -lnr -L/usr/lib -lgsl -lgslcblas

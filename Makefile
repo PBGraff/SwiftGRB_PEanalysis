@@ -8,6 +8,9 @@ main:
 detfrac:
 	make -C src detfrac
 
+rfdetfrac:
+	make -C src rfdetfrac
+
 test:
 	make -C src test
 

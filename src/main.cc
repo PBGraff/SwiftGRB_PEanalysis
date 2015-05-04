@@ -343,7 +343,7 @@ Run Settings\n\
 --resume         Resume the run from before (default=off)\n\
 --nlive          Number of live points for BAMBI to use (default=100)\n\
 --bins           [deprecated] Number of bins to use in redshift for likelihood (default=50)\n\
---zeroLogLike    Sample form prior with logL=0\n\
+--zeroLogLike    Sample from prior with logL=0\n\
 --outfile        Root for output files\n\
 --silent         Suppress BAMBI updates to stdout\n\
 \n\

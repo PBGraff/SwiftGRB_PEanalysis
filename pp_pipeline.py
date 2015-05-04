@@ -3,9 +3,7 @@ import os
 import triangle
 import matplotlib.pyplot as plt
 import scipy.stats
-
-names = [r'$n_0$', r'$n_1$', r'$n_2$', r'$n_{\ast}$', r'$n_{\rm tot}$']
-names2 = ['n0', 'n1', 'n2', 'nstar', 'ntot']
+from matplotlib.ticker import MultipleLocator
 
 def PlotTriangle(fileroot,usetruths=True):
 	data = np.loadtxt(fileroot+'post_equal_weights.dat', usecols=(0,1,2,3,4))
@@ -36,37 +34,23 @@ def PP_Plot(idx,cdf):
 	y[1:] = np.sort(cdf)
 	fig, ax = plt.subplots(1)
 	ax.plot(x,x,'--k',lw=2)
-	ax.plot(x,y,'-b',lw=2)
+	ax.plot(y,x,'-b',lw=2)
 	ax.axis([0,1,0,1])
 	ax.set_xlabel(r'$p$')
 	ax.set_ylabel(r'$\Pr(p)$')
 	ax.set_title(names[idx]+r' KS p-value = %.4lf'%(PP_KStest(cdf)))
+	ax.xaxis.set_major_locator(MultipleLocator(0.1))
+	ax.yaxis.set_major_locator(MultipleLocator(0.1))
+	ax.grid()
 	#plt.show()
 	fig.savefig(opts.outdir+'/pp_plot_'+names2[idx]+'.png')
 
-from optparse import OptionParser
-parser=OptionParser()
-parser.add_option("-n","--number",action="store",type="int",default=100,help="Number of analyses to run")
-parser.add_option("-o","--outdir",action="store",type="string",default="chains",help="Directory for analyses' output")
-(opts,args)=parser.parse_args()
-
-seeds = np.random.random_integers(10,30000,opts.number+1)
-recoveredCDFvals = np.zeros((opts.number,5))
-
-# run prior sampling
-os.system('./Analysis --seed='+str(seeds[0])+' --nlive='+str(opts.number)+' --outfile='+opts.outdir+'/prior_ --zeroLogLike --silent')
-
-# retrieve prior samples for injecting
-prior_samples = np.loadtxt(opts.outdir+'/prior_post_equal_weights.dat')
-n0_inj = prior_samples[:,0]
-n1_inj = prior_samples[:,1]
-n2_inj = prior_samples[:,2]
-
-# loop to perform all analyses
-for i in range(opts.number):
+def RunAnalysis(i):
 	root = opts.outdir+'/run'+str(i)+'_'
-	cmd = './Analysis --seed='+str(seeds[i+1])+' --nlive=1000  --silent --outfile='+root
+	cmd = './Analysis --seed='+str(seeds[i+1])+' --nlive='+str(opts.nlive)+'  --silent --outfile='+root
 	cmd = cmd + ' --n0='+str(n0_inj[i])+' --n1='+str(n1_inj[i])+' --n2='+str(n2_inj[i])
+	if (opts.resume):
+		cmd = cmd + ' --resume'
 	print cmd
 
 	# run the analysis
@@ -77,6 +61,37 @@ for i in range(opts.number):
 
 	# find recovered CDF for injected values
 	recoveredCDFvals[i,:] = FindRecoveryCDF(root)
+
+from optparse import OptionParser
+parser=OptionParser()
+parser.add_option("-n","--number",action="store",type="int",default=100,help="Number of analyses to run")
+parser.add_option("-o","--outdir",action="store",type="string",default="chains",help="Directory for analyses' output")
+parser.add_option("-m","--nlive",action="store",type="int",default=1000,help="Number of live points to use")
+parser.add_option("-r","--resume",action="store_true",type="bool",default=False,help="Resume previous run")
+(opts,args)=parser.parse_args()
+
+seeds = np.random.random_integers(10,30000,opts.number+1)
+recoveredCDFvals = np.zeros((opts.number,5))
+
+names = [r'$n_0$', r'$n_1$', r'$n_2$', r'$n_{\ast}$', r'$n_{\rm tot}$']
+names2 = ['n0', 'n1', 'n2', 'nstar', 'ntot']
+
+# run prior sampling
+cmd = './Analysis --seed='+str(seeds[0])+' --nlive='+str(opts.number)+' --outfile='+opts.outdir+'/prior_ --zeroLogLike --silent'
+if (opts.resume):
+	cmd = cmd + ' --resume'
+print cmd
+os.system(cmd)
+
+# retrieve prior samples for injecting
+prior_samples = np.loadtxt(opts.outdir+'/prior_post_equal_weights.dat')
+n0_inj = prior_samples[:,0]
+n1_inj = prior_samples[:,1]
+n2_inj = prior_samples[:,2]
+
+# loop to perform all analyses
+for i in range(opts.number):
+	RunAnalysis(i)
 
 # make P-P plots
 for i in range(5):
