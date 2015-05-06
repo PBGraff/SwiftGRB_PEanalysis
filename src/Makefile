@@ -27,6 +27,7 @@ export CC CXX FC CFLAGS CXXFLAGS FFLAGS
 OBJFILES = bambi.o utils.o main.o
 OBJFILES2 = utils.o detection_fraction.o
 OBJFILES3 = utils.o detection_fraction_RF.o
+OBJFILES3B = utils.o detection_fraction_AB.o
 OBJFILES4 = utils.o detection_fraction_both.o
 
 default: all
@@ -53,6 +54,9 @@ detfrac: nr $(OBJFILES2)
 
 rfdetfrac: nr $(OBJFILES3)
 	$(CXX) $(CFLAGS) -o ../RFDetectionFraction $(OBJFILES3) $(LIBS2)
+
+abdetfrac: nr $(OBJFILES3B)
+	$(CXX) $(CFLAGS) -o ../ABDetectionFraction $(OBJFILES3B) $(LIBS2)
 
 detfracboth: nr $(OBJFILES4)
 	$(CXX) $(CFLAGS) -o ../DetectionFractionBoth $(OBJFILES4) $(LIBS2)

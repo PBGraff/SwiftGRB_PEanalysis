@@ -139,7 +139,7 @@ Data Settings\n\
 		// make file names
 		char outfilename[100], infilename[100];
 		sprintf(outfilename, "population_data_%d.txt", k);
-		sprintf(infilename, "population_RF_predictions_%d.txt", k);
+		sprintf(infilename, "population_AB_predictions_%d.txt", k);
 
 		// simulate population
 		GeneratePopulationFixZ(datapop, runargs.datapopsize, z[k], XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
@@ -158,7 +158,7 @@ Data Settings\n\
 
 		// run python script for RF
 		char command[200];
-		sprintf(command, "python evalRF.py %s %s", outfilename, infilename);
+		sprintf(command, "python evalAB.py %s %s", outfilename, infilename);
 		system(command);
 
 		// collect results
@@ -204,7 +204,7 @@ Data Settings\n\
 	if (myid == 0)
 	{
 		// open file for outputs
-		FILE *outfile = fopen("support_data/splines_detection_fraction_z_RF.txt", "w");
+		FILE *outfile = fopen("support_data/splines_detection_fraction_z_AB.txt", "w");
 
 		// write results
 		for (i = 0; i < runargs.zpts; i++)
