@@ -28,11 +28,12 @@ OBJFILES = bambi.o utils.o main.o
 OBJFILES2 = utils.o detection_fraction.o
 OBJFILES3 = utils.o detection_fraction_RF.o
 OBJFILES3B = utils.o detection_fraction_AB.o
+OBJFILES3C = utils.o detection_fraction_flux.o
 OBJFILES4 = utils.o detection_fraction_both.o
 
 default: all
 
-all: main detfrac rfdetfrac abdetfrac detfracboth
+all: main detfrac rfdetfrac abdetfrac detfracflux detfracboth
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $*.c
@@ -57,6 +58,9 @@ rfdetfrac: nr $(OBJFILES3)
 
 abdetfrac: nr $(OBJFILES3B)
 	$(CXX) $(CFLAGS) -o ../ABDetectionFraction $(OBJFILES3B) $(LIBS2)
+
+detfracflux: nr $(OBJFILES3C)
+	$(CXX) $(CFLAGS) -o ../DetectionFractionFlux $(OBJFILES3C) $(LIBS2)
 
 detfracboth: nr $(OBJFILES4)
 	$(CXX) $(CFLAGS) -o ../DetectionFractionBoth $(OBJFILES4) $(LIBS2)

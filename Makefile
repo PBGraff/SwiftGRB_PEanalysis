@@ -16,6 +16,9 @@ rfdetfrac:
 abdetfrac:
 	make -C src abdetfrac
 
+detfracflux:
+	make -C src detfracflux
+
 detfracboth:
 	make -C src detfracboth
 
