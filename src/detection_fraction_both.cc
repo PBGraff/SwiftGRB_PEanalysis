@@ -117,22 +117,25 @@ Data Settings\n\
 	// allocate memory
 	sample = (float *) malloc(NINPUTS * sizeof(float));
 
-	double *datapop=NULL, *dataz=NULL, *dataprobRF=NULL, *dataprobNN=NULL;
+	double *datapop=NULL, *dataz=NULL, *dataprobRF=NULL, *dataprobNN=NULL, dataprobAB=NULL;
 	datapop = (double *) malloc(runargs.datapopsize * NINPUTS * sizeof(double));
 	dataz = (double *) malloc(runargs.datapopsize * sizeof(double));
 	dataprobRF = (double *) malloc(runargs.datapopsize * sizeof(double));
 	dataprobNN = (double *) malloc(runargs.datapopsize * sizeof(double));
+	dataprobAB = (double *) malloc(runargs.datapopsize * sizeof(double));
 	float dprob[2];
 
 	double dz = (ZMAX - ZMIN) / (double) (runargs.zpts - 1);
 	double *z = (double *) malloc(runargs.zpts * sizeof(double));
 	double *detfracRF = (double *) malloc(runargs.zpts * sizeof(double));
 	double *detfracNN = (double *) malloc(runargs.zpts * sizeof(double));
+	double *detfracAB = (double *) malloc(runargs.zpts * sizeof(double));
 
 	for (i = 0; i < runargs.zpts; i++)
 	{
 		z[i] = ZMIN + (double) i * dz;
 		detfracRF[i] = 0.0;
+		detfracAB[i] = 0.0;
 		detfracNN[i] = 0.0;
 	}
 
@@ -146,7 +149,7 @@ Data Settings\n\
 		// make file names
 		char outfilename[100], infilename[100];
 		sprintf(outfilename, "population_data_%d.txt", k);
-		sprintf(infilename, "population_RF_predictions_%d.txt", k);
+		sprintf(infilename, "population_predictions_%d.txt", k);
 
 		// simulate population
 		GeneratePopulationFixZ(datapop, runargs.datapopsize, z[k], XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
@@ -168,11 +171,23 @@ Data Settings\n\
 		sprintf(command, "python evalRF.py %s %s", outfilename, infilename);
 		system(command);
 
-		// collect results
+		// collect RF results
 		FILE *infileptr = fopen(infilename, "r");
 		for ( i=0; i<runargs.datapopsize; i++)
 		{
 			fscanf(infileptr, "%lf\n", &dataprobRF[i]);
+		}
+		fclose(infileptr);
+
+		// run python script for AB
+		sprintf(command, "python evalAB.py %s %s", outfilename, infilename);
+		system(command);
+
+		// collect AB results
+		FILE *infileptr = fopen(infilename, "r");
+		for ( i=0; i<runargs.datapopsize; i++)
+		{
+			fscanf(infileptr, "%lf\n", &dataprobAB[i]);
 		}
 		fclose(infileptr);
 
@@ -188,19 +203,21 @@ Data Settings\n\
 		}
 
 		// find detected GRBs
-		long int ndetdataRF=0, ndetdataNN=0, ndetdataBoth=0;
+		long int ndetdataRF=0, ndetdataNN=0, ndetdataBoth=0, ndetdataAB=0;
 		for ( i=0; i<runargs.datapopsize; i++)
 		{
 			if (dataprobRF[i] >= 0.5)
 				ndetdataRF++;
+			if (dataprobAB[i] >= 0.5)
+				ndetdataAB++;
 			if (dataprobNN[i] >= 0.5)
 				ndetdataNN++;
-			if (dataprobRF[i] >= 0.5 && dataprobNN[i] >= 0.5)
+			if (dataprobRF[i] >= 0.5 && dataprobAB[i] >= 0.5 && dataprobNN[i] >= 0.5)
 				ndetdataBoth++;
 		}
 		
-		printf("Simulated %ld GRBs at z=%g : RF detects %ld and NN detects %ld, %ld the same\n",
-			runargs.datapopsize, z[k], ndetdataRF, ndetdataNN, ndetdataBoth);
+		printf("Simulated %ld GRBs at z=%g : RF = %ld ; AB = %ld ; NN = %ld ; %ld the same\n",
+			runargs.datapopsize, z[k], ndetdataRF, ndetdataAB, ndetdataNN, ndetdataBoth);
 
 		// clear data files
 		sprintf(command, "rm -f %s %s", outfilename, infilename);
@@ -214,6 +231,7 @@ Data Settings\n\
 	{
 		MPI_Send(&detfracRF[zstart], zend - zstart, MPI_DOUBLE, 0, myid, MPI_COMM_WORLD);
 		MPI_Send(&detfracNN[zstart], zend - zstart, MPI_DOUBLE, 0, myid+ncpus, MPI_COMM_WORLD);
+		MPI_Send(&detfracAB[zstart], zend - zstart, MPI_DOUBLE, 0, myid+2*ncpus, MPI_COMM_WORLD);
 	}
 	else
 	{
@@ -224,6 +242,7 @@ Data Settings\n\
 			MPI_Status status;
 			MPI_Recv(&detfracRF[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i, MPI_COMM_WORLD, &status);
 			MPI_Recv(&detfracNN[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i+ncpus, MPI_COMM_WORLD, &status);
+			MPI_Recv(&detfracAB[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i+2*ncpus, MPI_COMM_WORLD, &status);
 		}
 	}
 #endif
@@ -237,7 +256,7 @@ Data Settings\n\
 		// write results
 		for (i = 0; i < runargs.zpts; i++)
 		{
-			fprintf(outfile, "%lf %lf %lf\n", z[i], detfracRF[i], detfracNN[i]);
+			fprintf(outfile, "%lf %lf %lf %lf\n", z[i], detfracRF[i], detfracAB[i], detfracNN[i]);
 		}
 
 		// close the file
