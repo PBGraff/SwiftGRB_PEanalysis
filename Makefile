@@ -1,6 +1,8 @@
-default: main
+default:
+	make -C src
 
-all: main test genpop
+all:
+	make -C src all
 
 main:
 	make -C src main
