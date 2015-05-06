@@ -32,7 +32,7 @@ OBJFILES4 = utils.o detection_fraction_both.o
 
 default: all
 
-all: main detfrac rfdetfrac abdetfrac detfracboth test genpop
+all: main detfrac rfdetfrac abdetfrac detfracboth
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $*.c
