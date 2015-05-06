@@ -37,7 +37,7 @@ double ksd, ksp, logpois, logpois0 = 0.0;
 float prob[2];
 RunArgs runargs;
 int *detcount=NULL, *popcount=NULL;
-double *detfrac=NULL;
+double *detfracRF=NULL, *detfracNN=NULL;
 
 extern "C" {
 	#include "mock_sample_functions.c"
@@ -117,7 +117,7 @@ Data Settings\n\
 	// allocate memory
 	sample = (float *) malloc(NINPUTS * sizeof(float));
 
-	double *datapop=NULL, *dataz=NULL, *dataprob=NULL;
+	double *datapop=NULL, *dataz=NULL, *dataprobRF=NULL, *dataprobNN=NULL;
 	datapop = (double *) malloc(runargs.datapopsize * NINPUTS * sizeof(double));
 	dataz = (double *) malloc(runargs.datapopsize * sizeof(double));
 	dataprobRF = (double *) malloc(runargs.datapopsize * sizeof(double));
@@ -126,12 +126,14 @@ Data Settings\n\
 
 	double dz = (ZMAX - ZMIN) / (double) (runargs.zpts - 1);
 	double *z = (double *) malloc(runargs.zpts * sizeof(double));
-	double *detfrac = (double *) malloc(runargs.zpts * sizeof(double));
+	double *detfracRF = (double *) malloc(runargs.zpts * sizeof(double));
+	double *detfracNN = (double *) malloc(runargs.zpts * sizeof(double));
 
 	for (i = 0; i < runargs.zpts; i++)
 	{
 		z[i] = ZMIN + (double) i * dz;
-		detfrac[i] = 0.0;
+		detfracRF[i] = 0.0;
+		detfracNN[i] = 0.0;
 	}
 
 	int Nz = (int) ceil((double)runargs.zpts / (double) ncpus);
@@ -210,7 +212,8 @@ Data Settings\n\
 	MPI_Barrier(MPI_COMM_WORLD);
 	if (myid != 0)
 	{
-		MPI_Send(&detfrac[zstart], zend - zstart, MPI_DOUBLE, 0, myid, MPI_COMM_WORLD);
+		MPI_Send(&detfracRF[zstart], zend - zstart, MPI_DOUBLE, 0, myid, MPI_COMM_WORLD);
+		MPI_Send(&detfracNN[zstart], zend - zstart, MPI_DOUBLE, 0, myid+ncpus, MPI_COMM_WORLD);
 	}
 	else
 	{
@@ -219,7 +222,8 @@ Data Settings\n\
 			int zstart_tmp = i * Nz;
 			int zend_tmp = (int) fmin((double)(i+1)*Nz, (double)runargs.zpts);
 			MPI_Status status;
-			MPI_Recv(&detfrac[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i, MPI_COMM_WORLD, &status);
+			MPI_Recv(&detfracRF[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i, MPI_COMM_WORLD, &status);
+			MPI_Recv(&detfracNN[zstart_tmp], zend_tmp - zstart_tmp, MPI_DOUBLE, i, i+ncpus, MPI_COMM_WORLD, &status);
 		}
 	}
 #endif
@@ -228,12 +232,12 @@ Data Settings\n\
 	if (myid == 0)
 	{
 		// open file for outputs
-		FILE *outfile = fopen("support_data/splines_detection_fraction_z_RF.txt", "w");
+		FILE *outfile = fopen("support_data/splines_detection_fraction_z_both.txt", "w");
 
 		// write results
 		for (i = 0; i < runargs.zpts; i++)
 		{
-			fprintf(outfile, "%lf %lf\n", z[i], detfrac[i]);
+			fprintf(outfile, "%lf %lf %lf\n", z[i], detfracRF[i], detfracNN[i]);
 		}
 
 		// close the file
@@ -242,7 +246,8 @@ Data Settings\n\
 	
 	// clean up allocated variables
 	free(z);
-	free(detfrac);
+	free(detfracRF);
+	free(detfracNN);
 	free(datapop);
 	free(dataprobRF);
 	free(dataprobNN);

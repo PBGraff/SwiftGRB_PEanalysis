@@ -54,7 +54,7 @@ detfrac: nr $(OBJFILES2)
 rfdetfrac: nr $(OBJFILES3)
 	$(CXX) $(CFLAGS) -o ../RFDetectionFraction $(OBJFILES3) $(LIBS2)
 
-detfracboth: nr $(OBJFILES2)
+detfracboth: nr $(OBJFILES4)
 	$(CXX) $(CFLAGS) -o ../DetectionFractionBoth $(OBJFILES4) $(LIBS2)
 
 genpop: nr
