@@ -204,7 +204,7 @@ Data Settings\n\
 	if (myid == 0)
 	{
 		// open file for outputs
-		FILE *outfile = fopen("support_data/splines_detection_fraction_z_RF.txt", "w");
+		FILE *outfile = fopen("support_data/splines_detection_fraction_z_AB.txt", "w");
 
 		// write results
 		for (i = 0; i < runargs.zpts; i++)
