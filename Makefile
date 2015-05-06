@@ -11,6 +11,9 @@ detfrac:
 rfdetfrac:
 	make -C src rfdetfrac
 
+detfracboth:
+	make -C src detfracboth
+
 test:
 	make -C src test
 
