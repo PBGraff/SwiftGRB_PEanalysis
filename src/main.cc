@@ -319,7 +319,14 @@ Model Settings\n\
 	char outroot[100] = "";
 	if ( runargs.seed == 0 )
 	{
-		sprintf(outroot, "chains/analysis_realdata_");
+		if (strlen(runargs.outfile)==0)
+		{
+			sprintf(outroot, "chains/analysis_realdata_");
+		}
+		else
+		{
+			strcpy(outroot, runargs.outfile);
+		}
 		
 		// Read in data
 		ndetdata = countlines(runargs.datafile);
