@@ -9,6 +9,8 @@
 #include <getopt.h>
 #include <stdbool.h>
 
+typedef enum {NEURALNET, RANDOMFOREST, ADABOOST, FLUXTHRESH} MLmethod;
+
 typedef struct RunOptions {
 	double n0;
 	double n1;
@@ -33,6 +35,7 @@ typedef struct RunOptions {
 	bool zeroLogLike;
 	char outfile[200];
 	int verbose;
+	MLmethod method;
 } RunArgs;
 
 // return an array of detected z from input array of z and detection prob, given a prob threshold

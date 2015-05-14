@@ -221,7 +221,7 @@ Data Settings\n\
 
 		// clear data files
 		sprintf(command, "rm -f %s %s", outfilename, infilename);
-		system(command);	
+		system(command);
 	}
 
 	// collect all results at root node

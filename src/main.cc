@@ -18,6 +18,8 @@ extern "C" {
 #define ZMIN		0.0
 #define ZMAX		10.0
 
+#define LOG10_FLUX_THRESHOLD	-7.243
+
 NeuralNetwork *GRBnn;
 double *zdata=NULL;
 long int ndetdata=0, ndetpop;
@@ -325,6 +327,7 @@ int main(int argc, char *argv[])
 	runargs.zeroLogLike = false;
 	strcpy(runargs.outfile,"");
 	runargs.verbose = 1;
+	runargs.method = NEURALNET;
 
 	long int dataseed=0;
 
@@ -346,6 +349,11 @@ Run Settings\n\
 --zeroLogLike    Sample from prior with logL=0\n\
 --outfile        Root for output files\n\
 --silent         Suppress BAMBI updates to stdout\n\
+--method         Choice of model to use for Swift detection:\n\
+                 0 = Neural Network (default)\n\
+                 1 = Random Forest\n\
+                 2 = AdaBoost\n\
+                 3 = Flux threshold\n\
 \n\
 Data Settings\n\
 -------------------------------------------------------------------------------------------------\n\
@@ -381,10 +389,6 @@ Model Settings\n\
 	}
 
 	dataseed = -347*runargs.seed;
-
-	// Read in saved neural network for GRB detection predictions
-	GRBnn = new FeedForwardClassNetwork();
-	GRBnn->read("support_data/Swift_NN_all_nhid-100-50_act330_network.txt");
 
 	// read in values for the background possibilities of simulated GRBs
 	read_background_values();
@@ -440,21 +444,101 @@ Model Settings\n\
 		float dprob[2];
 		// simulate population
 		GeneratePopulation(datapop, runargs.datapopsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, dataz, &dataseed);
-		for ( i=0; i<runargs.datapopsize; i++)
+		
+		// find detection probabilities
+		if (runargs.method == NEURALNET)
 		{
-			for ( j=0; j<NINPUTS; j++ )
+			// read in saved NN
+			GRBnn = new FeedForwardClassNetwork();
+			GRBnn->read("support_data/Swift_NN_all_nhid-100-50_act330_network.txt");
+			
+			// perform predictions
+			for ( i=0; i<runargs.datapopsize; i++)
 			{
-				sample[j] = (float) datapop[i*NINPUTS+j];
+				for ( j=0; j<NINPUTS; j++ )
+				{
+					sample[j] = (float) datapop[i*NINPUTS+j];
+				}
+				GRBnn->forwardOne(1, &sample[0], &dprob[0]);
+				dataprob[i] = (double) dprob[1];
 			}
-			GRBnn->forwardOne(1, &sample[0], &dprob[0]);
-			dataprob[i] = (double) dprob[1];
-			//dataprob[i] = 1.0;
 		}
+		else if (runargs.method == RANDOMFOREST || runargs.method == ADABOOST)
+		{
+			char outfilename[100], infilename[100], command[200];
+			sprintf(outfilename, "population_data.txt");
+			sprintf(infilename, "population_predictions.txt");
+
+			if (myid == 0)
+			{
+				FILE *outfileptr = fopen(outfilename, "w");
+				for ( i=0; i<runargs.datapopsize; i++)
+				{
+					for ( j=0; j<NINPUTS; j++ )
+					{
+						fprintf(outfileptr, "%lf ", datapop[i*NINPUTS+j]);
+					}
+					fprintf(outfileptr, "\n");
+				}
+				fclose(outfileptr);
+
+				// run python script for RF
+				char command[200];
+				if (runargs.method == RANDOMFOREST)
+				{
+					sprintf(command, "python evalRF.py %s %s", outfilename, infilename);
+				}
+				else
+				{
+					sprintf(command, "python evalAB.py %s %s", outfilename, infilename);
+				}
+				system(command);
+			}
+
+#ifdef PARALLEL
+ 			MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+			FILE *infileptr = fopen(infilename, "r");
+			for ( i=0; i<runargs.datapopsize; i++)
+			{
+				fscanf(infileptr, "%lf\n", &dataprob[i]);
+			}
+			fclose(infileptr);
+
+#ifdef PARALLEL
+ 			MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+			if (myid == 0)
+			{
+				sprintf(command, "rm -f %s %s", outfilename, infilename);
+				system(command);
+			}
+		}
+		else if (runargs.method == FLUXTHRESH)
+		{
+			for ( i=0; i<runargs.datapopsize; i++)
+			{
+				if (datapop[i*NINPUTS+13] >= LOG10_FLUX_THRESHOLD)
+					dataprob[i] = 1.0;
+				else
+					dataprob[i] = 0.0;
+			}
+		}
+		else
+		{
+			fprintf(stderr, "Invalid method chosen: %d\n", runargs.method);
+#ifdef PARALLEL
+ 			MPI_Finalize();
+#endif
+ 			exit(-1);
+		}
+
+		// find list of detected GRBs
 		detected(dataz, dataprob, runargs.datapopsize, 0.5, zdata, &ndetdata);
 		printf("Simulated data population generated with %ld GRBs => %ld detected\n", runargs.datapopsize, ndetdata);
-		logpois0 = -0.5 * log(2.0 * M_PI * (double) ndetdata);
-		// new likelihood prep
-		bindetections(zdata, ndetdata, ZMIN, ZMAX, runargs.nbins, detcount);
+		
 		// if printing a test population
 		if (runargs.testpop)
 		{
@@ -469,53 +553,11 @@ Model Settings\n\
 			}
 			fclose(fptr);
 		}
+		
 		// free memory
 		free(datapop);
 		free(dataz);
 		free(dataprob);
-
-		/* // simulate a similar population and evaluate the likelihood
-		// calculate the population size
-		runargs.popsize = runargs.datapopsize;
-		// allocate memory
-		population = (double *) malloc(runargs.popsize * NINPUTS * sizeof(double));
-		zpop = (double *) malloc(runargs.popsize * sizeof(double));
-		ppop = (double *) malloc(runargs.popsize * sizeof(double));
-		zdetpop = (double *) malloc(runargs.popsize * sizeof(double));
-		// simulate the population
-		GeneratePopulation(population, runargs.popsize, runargs.n0, runargs.n1, runargs.n2, Z1DATA, XDATA, YDATA, LOGLSTARDATA, zpop, &dataseed);
-		for ( i=0; i<runargs.popsize; i++)
-		{
-			for ( j=0; j<NINPUTS; j++ )
-			{
-				sample[j] = (float) population[i*NINPUTS+j];
-			}
-			GRBnn->forwardOne(1, &sample[0], &prob[0]);
-			ppop[i] = (double) prob[1];
-			//ppop[i] = 1.0;
-		}
-		detected(zpop, ppop, runargs.popsize, 0.5, zdetpop, &ndetpop);
-		//kstwo(zpop-1, ndetpop, zdata-1, ndetdata, &ksd, &ksp);
-		//logpois = logPoisson((double) ndetpop, (double) ndetdata) - logpois0;
-		//logpois = logPoisson2((double) ndetpop, (double) ndetdata);
-		//printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, log(ksp)+logpois);
-		// new likelihood prep and calc
-		bindetections(zdetpop, ndetpop, ZMIN, ZMAX, runargs.nbins, popcount);
-		double logLnew = 0.0, tmp;
-		for (i = 0; i < runargs.nbins; i++)
-		{
-			tmp = logPoisson3(popcount[i], detcount[i]);
-			logLnew += tmp;
-			//printf("%d %d %lf\n", detcount[i], popcount[i], tmp);
-		}
-		//logLnew /= (double) runargs.nbins;
-		//printf("New logL = %lf\n", logLnew);
-		printf("Similar distribution has %d detected GRBs and logL = %lf\n", ndetpop, logLnew);
-		// free memory
-		free(population);
-		free(zpop);
-		free(ppop);
-		free(zdetpop);*/
 
 		// calculate new logL function at true values
 		double logLnew = -1.0 * GRBRateIntegral(runargs.n0, runargs.n1, runargs.n2);
@@ -614,7 +656,7 @@ Model Settings\n\
 	logZero, maxiter, LogLike, dumper, bambi, context);
 
 	// clean up allocated variables
-	delete GRBnn;
+	if (runargs.method == NEURALNET) delete GRBnn;
 	free(zdata);
 	free(sample);
 	free(detcount);

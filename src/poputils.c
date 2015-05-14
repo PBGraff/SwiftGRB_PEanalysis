@@ -73,12 +73,43 @@ void load_splines()
 	splineDF = gsl_spline_alloc(gsl_interp_cspline, NSPLINEDF);
 
 	double z4[NSPLINEDF], df[NSPLINEDF], temp3;
-	FILE *fp4 = fopen("support_data/splines_detection_fraction_z.txt","r");
-	for ( i=0; i<NSPLINEDF; i++ )
+	FILE *fp4;
+	if (runargs.method == NEURALNET)
 	{
-		fscanf(fp4, "%lf %lf %lf\n", &z4[i], &df[i], &temp3);
+		fp4 = fopen("support_data/splines_detection_fraction_z.txt","r");
+		for ( i=0; i<NSPLINEDF; i++ )
+		{
+			fscanf(fp4, "%lf %lf %lf\n", &z4[i], &df[i], &temp3);
+		}
+		fclose(fp4);
 	}
-	fclose(fp4);
+	else if (runargs.method == RANDOMFOREST)
+	{
+		fp4 = fopen("support_data/splines_detection_fraction_z_RF.txt","r");
+		for ( i=0; i<NSPLINEDF; i++ )
+		{
+			fscanf(fp4, "%lf %lf\n", &z4[i], &df[i]);
+		}
+		fclose(fp4);
+	}
+	else if (runargs.method == ADABOOST)
+	{
+		fp4 = fopen("support_data/splines_detection_fraction_z_AB.txt","r");
+		for ( i=0; i<NSPLINEDF; i++ )
+		{
+			fscanf(fp4, "%lf %lf\n", &z4[i], &df[i]);
+		}
+		fclose(fp4);
+	}
+	else if (runargs.method == FLUXTHRESH)
+	{
+		fp4 = fopen("support_data/splines_detection_fraction_z_flux.txt","r");
+		for ( i=0; i<NSPLINEDF; i++ )
+		{
+			fscanf(fp4, "%lf %lf\n", &z4[i], &df[i]);
+		}
+		fclose(fp4);
+	}
 
 	gsl_spline_init(splineDF, z4, df, NSPLINEDF);
 }

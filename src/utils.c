@@ -42,6 +42,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 {
 	int c;
 	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0, testflag=0, zllflag=0, verboseflag=1;
+	static int method=0;
 	
 	while (1)
 	{
@@ -69,6 +70,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"bins", optional_argument, 0, 'b'},
 			{"zpts", optional_argument, 0, 'z'},
 			{"outfile", optional_argument, 0, 'o'},
+			{"method", optional_argument, 0, 'a'},
 			{0, 0, 0, 0}
 		};
 
@@ -119,6 +121,9 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			case 'o':
 				strcpy(args->outfile,optarg);
 				break;
+			case 'a':
+				method = atoi(optarg);
+				break;
 			case '?':
 				break;
 			default:
@@ -134,6 +139,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 	if (testflag == 1) args->testpop = true;
 	if (zllflag == 1) args->zeroLogLike = true;
 	args->verbose = verboseflag;
+	if (method>=0 && method<=3) args->method = method;
 }
 
 double logPoisson(double k, double lambda)
