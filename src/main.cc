@@ -54,22 +54,22 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 	double n0, n1, n2, nstar, ntotal;
 
 	// n1 from Cube[1]
-	n1 = CubeToFlatPrior(Cube[1], 1.60, 4.00);
+	n1 = CubeToFlatPrior(Cube[1], 0.00, 4.00);
 
 	// n2 from Cube[2]
-	n2 = CubeToFlatPrior(Cube[2], -4.00, 0.00);
+	n2 = CubeToFlatPrior(Cube[2], -6.00, 0.00);
 
 	// normalization parameters from Cube[0]
 	if (runargs.nstar) {
 		// nstar
-		nstar = CubeToLogPrior(Cube[0], 1.00, 1000.0);
+		nstar = CubeToLogPrior(Cube[0], 0.10, 10000.0);
 		// n0
 		n0 = nstar * pow(1.0 + Z1DATA, -n1);
 		// ntotal
 		ntotal = GRBNumberIntegral(n0, n1, n2);
 	} else if (runargs.ntotal) {
 		// ntotal
-		ntotal = CubeToLogPrior(Cube[0], 10.00, 3e4);
+		ntotal = CubeToLogPrior(Cube[0], 1.00, 1e5);
 		double ntmp = GRBNumberIntegral(1.0, n1, n2);
 		// n0
 		n0 = ntotal / ntmp;
@@ -78,9 +78,9 @@ void getphysparams(double *Cube, int &ndim, int &nPar, void *context)
 	} else {
 		// n0
 		if (runargs.flatn0) {
-			n0 = CubeToFlatPrior(Cube[0], 0.1, 2.00);
+			n0 = CubeToFlatPrior(Cube[0], 0.01, 2.00);
 		} else {
-			n0 = CubeToLogPrior(Cube[0], 0.1, 2.00);
+			n0 = CubeToLogPrior(Cube[0], 0.01, 2.00);
 		}
 		// nstar
 		nstar = n0 * pow(1.0 + Z1DATA, n1);
