@@ -100,7 +100,7 @@ void GeneratePopulation(double population[], long int population_size, double n0
 				z = ran2d(seed) * (runargs.zbin_max - runargs.zbin_min) + runargs.zbin_min;
 			} else {
 				//z = redshift_distribution(seed);
-				z = Redshift_rejection_sampler(seed, n0, n1, n2);
+				z = Redshift_rejection_sampler(seed, n0, n1, n2, z1);
 			}
 		} while ( std::isnan(z)==1 );
 

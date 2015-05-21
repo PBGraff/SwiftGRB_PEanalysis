@@ -258,19 +258,19 @@ double lum2flux_integral_numeric(double alpha, double beta, double Epeak, double
   	return result;
 }
 
-double Redshift_distribution_unnormalized(double z, double n1, double n2)
+double Redshift_distribution_unnormalized(double z, double n1, double n2, double z1)
 {
-	if (z <= Z1DATA)
+	if (z <= z1)
 	{
 		return pow(1.0 + z, n1);
 	} else {
-		return pow(1.0 + Z1DATA, n1 - n2) * pow(1.0 + z, n2);
+		return pow(1.0 + z1, n1 - n2) * pow(1.0 + z, n2);
 	}
 }
 
-double Redshift_distribution_normalized(double z, double n0, double n1, double n2)
+double Redshift_distribution_normalized(double z, double n0, double n1, double n2, double z1)
 {
-	return n0 * Redshift_distribution_unnormalized(z, n1, n2);
+	return n0 * Redshift_distribution_unnormalized(z, n1, n2, z1);
 }
 
 double Redshift_rescaled(double z, void *params)
@@ -279,19 +279,20 @@ double Redshift_rescaled(double z, void *params)
 	double n0 = pars[0];
 	double n1 = pars[1];
 	double n2 = pars[2];
+	double z1 = pars[3];
 
-	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2) / (1.0 + z);
+	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2, z1) / (1.0 + z);
 
 	Rprime *= DH3 * gsl_spline_eval(splineEz, z, accEz);
 
 	return Rprime;
 }
 
-double Redshift_rejection_sampler(long int *seed, double n0, double n1, double n2)
+double Redshift_rejection_sampler(long int *seed, double n0, double n1, double n2, double z1)
 {
-	double pars[3] = {n0, n1, n2};
+	double pars[4] = {n0, n1, n2, z1};
 	
-	double Rzmax = Redshift_rescaled(Z1DATA, (void *) &pars[0]);
+	double Rzmax = Redshift_rescaled(z1, (void *) &pars[0]);
 	
 	double z = 0.0, p, x;
 	for (;;)
@@ -308,9 +309,9 @@ double Redshift_rejection_sampler(long int *seed, double n0, double n1, double n
 	return z;
 }
 
-double GRBNumberIntegral(double n0, double n1, double n2)
+double GRBNumberIntegral(double n0, double n1, double n2, double z1)
 {
-	double pars[3] = {n0, n1, n2};
+	double pars[4] = {n0, n1, n2, z1};
 
 	double result, error;
 	unsigned long int neval;
@@ -326,9 +327,9 @@ double GRBNumberIntegral(double n0, double n1, double n2)
   	return result;
 }
 
-double GRBRate(double z, double n0, double n1, double n2)
+double GRBRate(double z, double n0, double n1, double n2, double z1)
 {
-	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2) / (1.0 + z);
+	double Rprime = Redshift_distribution_normalized(z, n0, n1, n2, z1) / (1.0 + z);
 
 	Rprime *= DH3 * gsl_spline_eval(splineEz, z, accEz);
 
@@ -343,13 +344,14 @@ double GRBRateFunc(double z, void *params)
 	double n0 = pars[0];
 	double n1 = pars[1];
 	double n2 = pars[2];
+	double z1 = pars[3];
 
-	return GRBRate(z, n0, n1, n2);
+	return GRBRate(z, n0, n1, n2, z1);
 }
 
-double GRBRateIntegral(double n0, double n1, double n2)
+double GRBRateIntegral(double n0, double n1, double n2, double z1)
 {
-	double pars[3] = {n0, n1, n2};
+	double pars[4] = {n0, n1, n2, z1};
 
 	double result, error;
 	unsigned long int neval;

@@ -42,7 +42,7 @@ void read_options(int argc, char *argv[], RunArgs *args)
 {
 	int c;
 	static int resflag=0, helpflag=0, nstarflag=0, ntotalflag=0, flatn0flag=0, testflag=0, zllflag=0, verboseflag=1;
-	static int method=0;
+	static int method=0, varyz1=0;
 	
 	while (1)
 	{
@@ -57,10 +57,12 @@ void read_options(int argc, char *argv[], RunArgs *args)
 			{"test", no_argument, &testflag, 1},
 			{"zeroLogLike", no_argument, &zllflag, 1},
 			{"silent", no_argument, &verboseflag, 0},
+			{"varyz1", no_argument, &varyz1, 1},
 			/* These options don’t set a flag. We distinguish them by their indices. */
 			{"n0", optional_argument, 0, 'n'},
 			{"n1", optional_argument, 0, 'm'},
 			{"n2", optional_argument, 0, 'l'},
+			{"z1", optional_argument, 0, 'y'},
 			{"seed", optional_argument, 0, 's'},
 			{"pop", optional_argument, 0, 'p'},
 			{"dpop", optional_argument, 0, 'd'},
@@ -92,6 +94,9 @@ void read_options(int argc, char *argv[], RunArgs *args)
 				break;
 			case 'l':
 				args->n2 = atof(optarg);
+				break;
+			case 'y':
+				args->z1 = atof(optarg);
 				break;
 			case 's':
 				args->seed = atol(optarg);
@@ -133,13 +138,20 @@ void read_options(int argc, char *argv[], RunArgs *args)
 
 	args->resume = resflag;
 	args->help = helpflag;
+
 	if (nstarflag == 1) args->nstar = true;
 	if (ntotalflag == 1) args->ntotal = true;
 	if (flatn0flag == 1) args->flatn0 = true;
 	if (testflag == 1) args->testpop = true;
 	if (zllflag == 1) args->zeroLogLike = true;
+	if (varyz1 == 1) args->vary_z1 = true;
+
 	args->verbose = verboseflag;
+
 	if (method>=0 && method<=3) args->method = method;
+
+	if (args->z1 < 0.0) args->z1 = 0.0;
+	else if (args->z1 > 10.0) args->z1 = 10.0;
 }
 
 double logPoisson(double k, double lambda)

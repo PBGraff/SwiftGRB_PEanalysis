@@ -15,6 +15,7 @@ typedef struct RunOptions {
 	double n0;
 	double n1;
 	double n2;
+	double z1;
 	long int seed;
 	int resume;
 	long int popsize;
@@ -36,6 +37,7 @@ typedef struct RunOptions {
 	char outfile[200];
 	int verbose;
 	MLmethod method;
+	bool vary_z1;
 } RunArgs;
 
 // return an array of detected z from input array of z and detection prob, given a prob threshold
