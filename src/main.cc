@@ -4,6 +4,7 @@ extern "C" {
 	#include "utils.h"
 	#include "mock_sample_functions.h"
 }
+#include <time.h>
 
 //#define POPSIZE		5000
 //#define DPOPSIZE	100
@@ -136,6 +137,8 @@ void getallparams(double *Cube, int &ndim, int &nPar, void *context)
 
 void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 {
+	//clock_t t = clock();
+
 	// Extract population parameters
 	getallparams(Cube,ndim,npars,context);
 	double n0, n1, n2, z1;
@@ -159,6 +162,9 @@ void getLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 		}
 		//printf("logL = %lf\n", lnew);
 	}
+
+	//t = clock() - t;
+	//printf("%lf ms for logL\n", 1.0e3 * (double)t / CLOCKS_PER_SEC);
 }
 
 
