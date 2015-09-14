@@ -6,9 +6,9 @@ See [the paper on arXiv](www.arxiv.org/abs/1509.01228).
 
 ## Code Dependencies
 
-## Makefile
-
 ## Machine Learning Model Scripts
+
+## Makefile for BAMBI PE
 
 ## Plotting Scripts
 
