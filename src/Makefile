@@ -1,14 +1,18 @@
 # MAC
+MCMC = $(PWD)/ptmcmc
 CBLASDIR = /opt/local
-CC = gcc-mp-4.8 -m64
-CXX = g++-mp-4.8 -m64
-FC = gfortran-mp-4.7 -m64
-CFLAGS += -I. -O3 -g -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
-CXXFLAGS += -I. -O3 -g -I$(CBLASDIR)/include/ -I/usr/local/include -Inumerical_recipes_double
-FFLAGS += -w -O3 -g
-LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas
+BAMBIDIR = ~/Projects/GWDA/LISA-type-response/flare/BAMBI
+INCLIB = $(CBLASDIR) $(BAMBIDIR) $(MCMC) /usr/local
+INCS=$(INCLIB:%=-I %/include) -Inumerical_recipes_double
+CC = x86_64-apple-darwin15-gcc-mp-5
+CXX = x86_64-apple-darwin15-g++-mp-5
+FC =  x86_64-apple-darwin15-gfortran-mp-5
+CFLAGS += -I. -O1 -g $(INCS)  $(INCLIB:%=-L %/lib)
+CXXFLAGS += -I. -O1 -g -std=c++11 $(INCS)
+FFLAGS += -w -O3 -g $(INCLIB:%=-L %/lib)
+LAPACKLIB = -L$(CBLASDIR)/lib -llapack -latlas -lcblas -lf77blas 
 LIBS =  -L/usr/local/lib -lbambi-1.2 $(LAPACKLIB) -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
-LIBS2 = -L/usr/local/lib -lbambi-1.2 -L$(CBLASDIR)/lib -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl
+LIBS2 = -L/usr/local/lib -lbambi-1.2 -L$(CBLASDIR)/lib -lstdc++ -Lnumerical_recipes_double -lnr -lm -lgsl 
 
 # NEMO
 #CC = gcc -DPARALLEL
@@ -22,9 +26,11 @@ LIBS2 = -L/usr/local/lib -lbambi-1.2 -L$(CBLASDIR)/lib -lstdc++ -Lnumerical_reci
 #LIBS2 = $(LIBS)
 #CFLAGS += -I/home/pgraff/BAMBI/src -Inumerical_recipes_double
 
+
 export CC CXX FC CFLAGS CXXFLAGS FFLAGS
  
 OBJFILES = bambi.o utils.o main.o
+OBJFILESM = utils.o mcmc.o
 OBJFILES2 = utils.o detection_fraction.o
 OBJFILES3 = utils.o detection_fraction_RF.o
 OBJFILES3B = utils.o detection_fraction_AB.o
@@ -33,13 +39,15 @@ OBJFILES4 = utils.o detection_fraction_both.o
 
 default: all
 
-all: main detfrac rfdetfrac abdetfrac detfracflux detfracboth
+#all: main detfrac rfdetfrac abdetfrac detfracflux detfracboth
+#all: main detfrac rfdetfrac abdetfrac detfracflux mcmc
+all: main detfrac rfdetfrac abdetfrac detfracflux
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $*.c
 
 %.o: %.cc
-	$(CXX) $(CFLAGS) -c $*.cc
+	$(CXX) $(CXXFLAGS) -c $*.cc
 
 test: kstest.c test.c
 	$(CC) -O3 -o test kstest.c test.c 
@@ -68,8 +76,18 @@ detfracboth: nr $(OBJFILES4)
 genpop: nr
 	$(CXX) $(CFLAGS) -o GenPop genPopTest.cc -Lnumerical_recipes_double -lnr -L/usr/lib -lgsl -lgslcblas
 
+mcmc.o:GRB_bayesian_components.hh
+
+mcmc: nr  ${MCMC}/lib/libptmcmc.a $(OBJFILESM)
+	$(FC) $(FFLAGS) -fopenmp -o ../MCMC_Analysis $(OBJFILESM) $(LIBS) -lptmcmc -lprobdist
+
+#cleaning
+
 clean:
 	rm -f *.o test ../Analysis ../DetectionFraction GenPop
+	${MAKE} -C ptmcmc clean
+	rm -f lib/*.a
+	rm -f include/*.h*
 
 cleanall: clean
 	make -C numerical_recipes_double clean
@@ -79,3 +97,22 @@ tidy:
 
 tidyall: tidy
 	make -C numerical_recipes_double tidy
+
+#Stuff to build ptmcmc
+
+.ptmcmc-version: ${MCMC}/lib/libptmcmc.a ${MCMC}/lib/libprobdist.a
+	cd ptmcmc;git rev-parse HEAD > ../.ptmcmc-version;git status >> ../.ptmcmc-version;git diff >> ../.ptmcmc-version
+
+ptmcmc:
+	@echo "Need to check out ptmcmc from github:"
+	@git clone https://github.com/JohnGBaker/ptmcmc.git
+
+$(MCMC)/lib/libptmcmc.a: ptmcmc
+	@echo "Descending to ptmcmc"
+	${MAKE} -C ${MCMC}  ${MFLAGS} ${MCMC}/lib/libptmcmc.a
+
+$(MCMC)/lib/libprobdist.a: ${LIB} ${INCLUDE} ptmcmc
+	@echo "Descending into ptmcmc"
+	${MAKE} -C ${MCMC}  ${MFLAGS} ${MCMC}/lib/libprobdist.a
+
+clean: tidy
